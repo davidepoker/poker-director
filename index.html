@@ -1082,6 +1082,11 @@
                             setKillerPoints(data.killerPoints || {});
                             setBlindStructure(data.blindStructure || defaultBlindStructure);
                             
+                            // ⭐ NUOVO: Sincronizza vista solo in viewer mode
+                            if (!isAdminMode && data.currentView) {
+                                setCurrentView(data.currentView);
+                            }
+                            
                             setTimeout(() => {
                                 isReceivingRef.current = false;
                             }, 1000);
@@ -1114,7 +1119,8 @@
                 currentLevel, 
                 timeLeft, 
                 eliminationHistory.length,
-                killerPoints
+                killerPoints,
+                currentView  // ⭐ NUOVO: Salva quando cambia vista
             ]);
 
             useEffect(() => {
@@ -1221,6 +1227,7 @@
                     eliminationHistory: eliminationHistory || [],
                     killerPoints: killerPoints || {},
                     blindStructure: blindStructure || [],
+                    currentView: currentView || 'timer', // ⭐ NUOVO: Sincronizza vista
                     lastUpdated: Date.now()
                 });
 
