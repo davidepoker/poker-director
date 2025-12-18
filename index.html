@@ -3,234 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Davide Poker Director</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>🎰 Davide Poker Director - Complete</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap');
+        
         :root {
-            --poker-green: #0A5C3E;
-            --poker-green-light: #0D7A51;
-            --poker-gold: #D4AF37;
-            --dark-bg: #0A0E14;
-            --card-bg: #151B26;
-            --text-primary: #E8EBF0;
-            --text-secondary: #9BA3B4;
-            --border-color: #1F2937;
-            --accent-red: #EF4444;
-            --accent-blue: #3B82F6;
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #131829;
+            --card-bg: #1a1f35;
+            --border-color: #2d3548;
+            --text-primary: #e8eaf0;
+            --text-secondary: #9ba3b4;
+            --poker-gold: #ffd700;
+            --poker-red: #dc143c;
+            --accent-blue: #4a9eff;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, var(--dark-bg) 0%, #0F1419 100%);
+            font-family: 'Barlow', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
         }
-        .app-container { max-width: 1400px; margin: 0 auto; padding-bottom: 80px; }
-        .app-header {
-            background: linear-gradient(135deg, var(--poker-green) 0%, var(--poker-green-light) 100%);
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(10, 92, 62, 0.4);
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--poker-gold);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .app-logo { font-family: 'Barlow', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--poker-gold); text-transform: uppercase; letter-spacing: 2px; }
-        .logo-subtitle { font-size: 0.7rem; color: var(--text-primary); letter-spacing: 3px; opacity: 0.9; }
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--card-bg);
-            border-top: 2px solid var(--poker-green);
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--poker-gold);
             display: flex;
-            justify-content: space-around;
-            padding: 0.75rem 0;
-            z-index: 100;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 0.25rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            transition: all 0.3s ease;
+            gap: 0.5rem;
         }
-        .nav-item:hover, .nav-item.active { color: var(--poker-gold); background: rgba(212, 175, 55, 0.1); }
-        .nav-icon { font-size: 1.5rem; }
-        .dashboard { padding: 2rem 1rem; }
-        .section-title { font-family: 'Barlow', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-        .tournament-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-        .tournament-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .tournament-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--poker-green) 0%, var(--poker-gold) 100%);
-        }
-        .tournament-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(10, 92, 62, 0.3); }
-        .tournament-card.create {
-            background: linear-gradient(135deg, var(--poker-green) 0%, var(--poker-green-light) 100%);
-            border: 2px dashed var(--poker-gold);
+
+        .header-actions {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 200px;
             gap: 1rem;
+            align-items: center;
         }
-        .tournament-status {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-        }
-        .status-active { background: rgba(34, 197, 94, 0.2); color: #22C55E; }
-        .tournament-name { font-family: 'Barlow', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
-        .create-icon { font-size: 3rem; color: var(--poker-gold); }
-        .create-text { font-family: 'Barlow', sans-serif; font-size: 1.25rem; font-weight: 600; }
+
         .btn {
             padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
             font-family: 'Barlow', sans-serif;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+
         .btn-primary {
-            background: linear-gradient(135deg, var(--poker-green) 0%, var(--poker-green-light) 100%);
+            background: linear-gradient(135deg, var(--poker-gold) 0%, #ffed4e 100%);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
             color: var(--text-primary);
-            box-shadow: 0 4px 12px rgba(10, 92, 62, 0.3);
+            border: 1px solid var(--border-color);
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(10, 92, 62, 0.4); }
-        .btn-secondary { background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn-danger { background: var(--accent-red); color: var(--text-primary); }
-        .btn-secondary:hover { border-color: var(--poker-green); background: rgba(10, 92, 62, 0.1); }
-        .create-tournament { padding: 2rem 1rem; max-width: 800px; margin: 0 auto; }
-        .stepper {
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--poker-gold);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .icon-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--poker-gold);
+            transform: scale(1.1);
+        }
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 2px solid var(--poker-gold);
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 3rem;
-            position: relative;
+            justify-content: space-around;
+            padding: 0.75rem 0;
+            z-index: 100;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
         }
-        .stepper::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 40px;
-            right: 40px;
-            height: 2px;
-            background: var(--border-color);
-        }
-        .step {
+
+        .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
-            z-index: 1;
-            position: relative;
-        }
-        .step-number {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-        .step.active .step-number { background: var(--poker-green); border-color: var(--poker-gold); color: var(--poker-gold); }
-        .step.completed .step-number { background: var(--poker-gold); border-color: var(--poker-gold); color: var(--dark-bg); }
-        .step-label { font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); text-align: center; }
-        .form-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
-        .form-group { margin-bottom: 1.5rem; }
-        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
-        .form-input, .form-select {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--dark-bg);
-            border: 1px solid var(--border-color);
+            gap: 0.25rem;
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
             border-radius: 8px;
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
         }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--poker-green); box-shadow: 0 0 0 3px rgba(10, 92, 62, 0.2); }
-        .form-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; flex-wrap: wrap; }
-        .timer-container { padding: 2rem 1rem; max-width: 800px; margin: 0 auto; }
+
+        .nav-item:hover {
+            color: var(--poker-gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .nav-item.active {
+            color: var(--poker-gold);
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .timer-container {
+            padding: 2rem 1rem;
+        }
+
         .timer-display {
-            background: linear-gradient(135deg, var(--card-bg) 0%, rgba(21, 27, 38, 0.8) 100%);
-            border: 2px solid var(--poker-green);
-            border-radius: 24px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);
+            border: 3px solid var(--poker-gold);
+            border-radius: 20px;
             padding: 3rem 2rem;
             text-align: center;
             margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(10, 92, 62, 0.3);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
         }
-        .timer-time { font-family: 'Barlow', sans-serif; font-size: 5rem; font-weight: 800; color: var(--poker-gold); text-shadow: 0 4px 12px rgba(212, 175, 55, 0.5); letter-spacing: 4px; }
-        .timer-level { font-size: 1.5rem; color: var(--text-secondary); margin-top: 1rem; }
-        .blind-info { display: flex; justify-content: center; gap: 3rem; margin-top: 2rem; flex-wrap: wrap; }
-        .blind-item { text-align: center; }
-        .blind-label { font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
-        .blind-value { font-family: 'Barlow', sans-serif; font-size: 2rem; font-weight: 700; color: var(--poker-gold); }
-        .timer-controls { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-        .timer-btn { padding: 1rem 2rem; font-size: 1.1rem; min-width: 140px; }
-        .prize-summary {
-            background: var(--card-bg);
-            border: 1px solid var(--poker-green);
-            border-radius: 12px;
-            padding: 1.5rem;
+
+        .timer-time {
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--poker-gold);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            font-family: 'Barlow', monospace;
+            letter-spacing: 0.1em;
+        }
+
+        .timer-level {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .blind-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
             margin-top: 2rem;
         }
-        .prize-pool-total {
+
+        .blind-item {
             text-align: center;
+        }
+
+        .blind-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .blind-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--poker-gold);
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .prize-pool-section {
+            background: var(--card-bg);
+            border: 2px solid var(--poker-gold);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .prize-pool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .prize-item {
+            text-align: center;
+        }
+
+        .prize-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .prize-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--poker-gold);
+        }
+
+        .killer-pool {
+            background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
+            border: 2px solid #ff6b6b;
             padding: 1rem;
-            background: linear-gradient(135deg, var(--poker-green) 0%, var(--poker-green-light) 100%);
             border-radius: 8px;
+            text-align: center;
+        }
+
+        .killer-pool-label {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 0.5rem;
+        }
+
+        .killer-pool-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .dashboard {
+            padding: 2rem 1rem;
+        }
+
+        .tournament-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .tournament-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tournament-card:hover {
+            border-color: var(--poker-gold);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+        }
+
+        .tournament-card.create {
+            background: linear-gradient(135deg, var(--poker-gold) 0%, #ffed4e 100%);
+            color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .create-icon {
+            font-size: 4rem;
             margin-bottom: 1rem;
         }
-        .prize-pool-label { font-size: 0.9rem; color: var(--text-primary); opacity: 0.8; }
-        .prize-pool-amount { font-family: 'Barlow', sans-serif; font-size: 2rem; font-weight: 800; color: var(--poker-gold); }
-        .prize-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; }
-        .prize-item {
-            background: var(--dark-bg);
-            padding: 0.75rem;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--border-color);
+
+        .create-text {
+            font-size: 1.2rem;
+            font-weight: 700;
         }
-        .prize-position { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; }
-        .prize-amount { font-family: 'Barlow', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--poker-gold); }
+
+        .tournament-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .tournament-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--poker-gold);
+            margin-bottom: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            color: var(--poker-gold);
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--poker-gold);
+            margin-bottom: 1.5rem;
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -244,9 +398,10 @@
             z-index: 1000;
             padding: 1rem;
         }
+
         .modal-content {
             background: var(--card-bg);
-            border: 2px solid var(--poker-green);
+            border: 2px solid var(--poker-gold);
             border-radius: 16px;
             padding: 2rem;
             max-width: 500px;
@@ -254,58 +409,219 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-        .modal-header { font-family: 'Barlow', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--poker-gold); margin-bottom: 1.5rem; }
-        .modal-actions { display: flex; gap: 1rem; margin-top: 2rem; }
-        .players-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
-        .player-item {
-            background: var(--dark-bg);
-            padding: 0.75rem;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border-color);
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--poker-gold);
+            margin-bottom: 1.5rem;
         }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Barlow', sans-serif;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--poker-gold);
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-item {
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .player-item:hover {
+            border-color: var(--poker-gold);
+            background: var(--card-bg);
+        }
+
         .player-item.eliminated {
             opacity: 0.6;
-            background: rgba(239, 68, 68, 0.1);
-            border-color: var(--accent-red);
+            background: rgba(220, 20, 60, 0.1);
         }
-        .player-name { font-weight: 600; }
-        .player-rebuy { font-size: 0.85rem; color: var(--poker-gold); margin-left: 0.5rem; }
-        .icon-btn {
-            width: 36px;
-            height: 36px;
-            border: 1px solid var(--border-color);
+
+        .player-name {
+            font-weight: 600;
+            color: var(--poker-gold);
+        }
+
+        .poker-table {
+            background: linear-gradient(135deg, #1a5f1a 0%, #0d3f0d 100%);
+            border: 8px solid #8B4513;
+            border-radius: 50%;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1;
+            margin: 0 auto 2rem;
+            position: relative;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        .table-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 900;
+            color: rgba(255, 215, 0, 0.3);
+            z-index: 1;
+        }
+
+        .table-seats {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .table-seat {
+            position: absolute;
+            width: 80px;
+            height: 80px;
             background: var(--card-bg);
-            border-radius: 6px;
+            border: 3px solid var(--poker-gold);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 0.25rem;
+            cursor: move;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .table-seat:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--poker-gold);
+            z-index: 20;
+        }
+
+        .table-seat.empty {
+            background: rgba(26, 31, 53, 0.3);
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            cursor: default;
+        }
+
+        .seat-chips {
+            font-size: 0.6rem;
+            color: var(--poker-gold);
+            margin-top: 0.25rem;
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
         }
-        .icon-btn:hover { border-color: var(--poker-green); background: rgba(10, 92, 62, 0.2); }
-        .icon-btn.delete:hover { border-color: var(--accent-red); background: rgba(239, 68, 68, 0.2); }
-        .blind-editor { display: flex; flex-direction: column; gap: 1rem; }
+
+        .step.active {
+            background: var(--poker-gold);
+            border-color: var(--poker-gold);
+            color: var(--bg-primary);
+        }
+
+        .step.completed {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: white;
+        }
+
+        .blind-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
         .blind-level-item {
-            background: var(--dark-bg);
+            background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1rem;
             display: flex;
-            gap: 1rem;
             align-items: center;
+            gap: 1rem;
+        }
+
+        .blind-level-item.break {
+            background: rgba(74, 158, 255, 0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .level-number {
+            font-weight: 700;
+            color: var(--poker-gold);
+            min-width: 40px;
+        }
+
+        .blind-inputs {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
             flex-wrap: wrap;
         }
-        .blind-level-item.break { border-left: 4px solid var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
-        .level-number { font-family: 'Barlow', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--poker-gold); min-width: 40px; }
-        .blind-inputs { display: flex; gap: 0.75rem; flex: 1; flex-wrap: wrap; }
-        .blind-input-group { display: flex; flex-direction: column; gap: 0.25rem; min-width: 100px; }
-        .blind-input-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; }
+
+        .blind-input-group {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .blind-input-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
         .blind-input-small {
-            width: 100px;
+            width: 100%;
             padding: 0.5rem;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -313,123 +629,143 @@
             color: var(--text-primary);
             font-size: 0.9rem;
         }
-        .add-level-btn {
-            width: 100%;
-            padding: 1rem;
-            border: 2px dashed var(--border-color);
-            background: transparent;
-            border-radius: 8px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
+
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 2rem;
         }
-        .add-level-btn:hover { border-color: var(--poker-green); color: var(--poker-gold); background: rgba(10, 92, 62, 0.1); }
-        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; }
-        .info-label { font-weight: 500; color: var(--text-secondary); }
-        .info-value { font-weight: 600; color: var(--poker-gold); }
-        .poker-table {
-            background: linear-gradient(135deg, var(--poker-green) 0%, var(--poker-green-light) 100%);
-            border: 4px solid var(--poker-gold);
-            border-radius: 50%;
-            aspect-ratio: 1.4;
-            position: relative;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(10, 92, 62, 0.4), inset 0 0 60px rgba(0, 0, 0, 0.3);
+
+        @media (max-width: 768px) {
+            .timer-time {
+                font-size: 3.5rem;
+            }
+            
+            .blind-info {
+                gap: 1.5rem;
+            }
+            
+            .blind-value {
+                font-size: 1.5rem;
+            }
+            
+            .tournament-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .poker-table {
+                max-width: 400px;
+            }
+            
+            .table-seat {
+                width: 60px;
+                height: 60px;
+                font-size: 0.6rem;
+            }
         }
-        .table-number {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: 'Barlow', sans-serif;
-            font-size: 3rem;
-            font-weight: 800;
-            color: rgba(212, 175, 55, 0.3);
-        }
-        .table-seats { position: relative; width: 100%; height: 100%; z-index: 1; }
-        .table-seat {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.25rem;
-            cursor: move;
-            transition: all 0.3s ease;
-            padding: 0.5rem;
-        }
-        .table-seat:hover { border-color: var(--poker-gold); transform: scale(1.05); }
-        .table-seat.empty { background: rgba(21, 27, 38, 0.3); border: 2px dashed var(--border-color); cursor: default; }
-        .table-seat:nth-child(1) { top: 0%; left: 50%; transform: translateX(-50%); }
-        .table-seat:nth-child(2) { top: 10%; left: 85%; transform: translateX(-50%); }
-        .table-seat:nth-child(3) { top: 35%; left: 95%; transform: translateX(-50%); }
-        .table-seat:nth-child(4) { top: 65%; left: 95%; transform: translateX(-50%); }
-        .table-seat:nth-child(5) { top: 90%; left: 85%; transform: translateX(-50%); }
-        .table-seat:nth-child(6) { top: 100%; left: 50%; transform: translate(-50%, -100%); }
-        .table-seat:nth-child(7) { top: 90%; left: 15%; transform: translateX(-50%); }
-        .table-seat:nth-child(8) { top: 65%; left: 5%; transform: translateX(-50%); }
-        .table-seat:nth-child(9) { top: 35%; left: 5%; transform: translateX(-50%); }
-        .seat-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--poker-green) 0%, var(--poker-gold) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Barlow', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--dark-bg);
-        }
-        .seat-name { font-size: 0.7rem; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-        .seat-chips { font-size: 0.65rem; font-weight: 700; color: var(--poker-gold); }
-        .tables-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 2rem; }
-        .elimination-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            background: var(--accent-red);
-            color: white;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
-        }
+
         .save-indicator {
             position: fixed;
-            bottom: 90px;
+            top: 80px;
             right: 20px;
-            background: var(--poker-green);
+            background: var(--accent-green);
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 999;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             animation: slideIn 0.3s ease;
+            z-index: 1000;
         }
+
         @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-        @media (max-width: 768px) {
-            .timer-time { font-size: 3.5rem; }
-            .blind-value { font-size: 1.5rem; }
+
+        .killer-stats {
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.15) 0%, rgba(139, 0, 0, 0.15) 100%);
+            border: 2px solid rgba(220, 20, 60, 0.5);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .killer-stats-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ff6b6b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .killer-leaderboard {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .killer-entry {
+            background: var(--card-bg);
+            border: 1px solid rgba(220, 20, 60, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .killer-rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--poker-gold);
+            min-width: 40px;
+        }
+
+        .killer-player {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .killer-count {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        .killer-prize {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--poker-gold);
+            margin-left: 1rem;
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         // ═══════════════════════════════════════════════════════════════════
-        // CONFIGURAZIONE FIREBASE - SOSTITUISCI CON I TUOI VALORI
+        // FIREBASE CONFIGURATION
         // ═══════════════════════════════════════════════════════════════════
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAJK23vwe55M6JxK4sMfubIgGLDgjS7g7Q",
@@ -441,81 +777,28 @@
             appId: "1:912833216010:web:037faca9fc6d7ad02429f3"
         };
 
-        // Carica config da localStorage se presente
-        const savedConfig = localStorage.getItem('firebaseConfig');
-        const firebaseConfig = savedConfig ? JSON.parse(savedConfig) : FIREBASE_CONFIG;
-
-        // Inizializza Firebase
+        // Check if Firebase is configured
+        const isFirebaseConfigured = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+        
         let database = null;
-        let isFirebaseConfigured = false;
-
-        try {
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
+        if (isFirebaseConfigured) {
+            try {
+                firebase.initializeApp(FIREBASE_CONFIG);
                 database = firebase.database();
-                isFirebaseConfigured = true;
-                console.log("✅ Firebase connesso:", firebaseConfig.projectId);
-            } else {
-                console.warn("⚠️ Firebase non configurato - Usa solo localStorage");
+                console.log("✅ Firebase connesso:", FIREBASE_CONFIG.projectId);
+            } catch (error) {
+                console.error("❌ Errore Firebase:", error);
             }
-        } catch (error) {
-            console.error("❌ Errore Firebase:", error);
-            isFirebaseConfigured = false;
+        } else {
+            console.log("ℹ️ Firebase non configurato - Solo localStorage");
         }
 
-
-        const STORAGE_KEY = 'davide_poker_tournaments';
-        const ACTIVE_TOURNAMENT_KEY = 'davide_poker_active_tournament';
-
-        const defaultBlindStructure = [
-            { level: 1, time: 20, smallBlind: 25, bigBlind: 50, ante: 0, isBreak: false },
-            { level: 2, time: 20, smallBlind: 50, bigBlind: 100, ante: 0, isBreak: false },
-            { level: 3, time: 20, smallBlind: 75, bigBlind: 150, ante: 25, isBreak: false },
-            { level: 4, time: 15, smallBlind: 0, bigBlind: 0, ante: 0, isBreak: true, breakName: "Pausa 15min" },
-            { level: 5, time: 20, smallBlind: 100, bigBlind: 200, ante: 25, isBreak: false },
-            { level: 6, time: 20, smallBlind: 150, bigBlind: 300, ante: 50, isBreak: false },
-            { level: 7, time: 20, smallBlind: 200, bigBlind: 400, ante: 50, isBreak: false },
-            { level: 8, time: 15, smallBlind: 0, bigBlind: 0, ante: 0, isBreak: true, breakName: "Pausa 15min" },
-            { level: 9, time: 20, smallBlind: 300, bigBlind: 600, ante: 75, isBreak: false },
-            { level: 10, time: 20, smallBlind: 400, bigBlind: 800, ante: 100, isBreak: false }
-        ];
-
-        const payoutStructure = [
-            { position: 1, percentage: 40 },
-            { position: 2, percentage: 25 },
-            { position: 3, percentage: 15 },
-            { position: 4, percentage: 12 },
-            { position: 5, percentage: 8 }
-        ];
-
-        function App() {
-            const [currentView, setCurrentView] = useState('dashboard');
-            const [showModal, setShowModal] = useState(false);
-            const [modalType, setModalType] = useState(null);
-            const [showSaveIndicator, setShowSaveIndicator] = useState(false);
-            
-            // Saved tournaments
-            const [savedTournaments, setSavedTournaments] = useState(() => {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                return saved ? JSON.parse(saved) : [];
-            });
-
-            // Tournament creation
-            const [createStep, setCreateStep] = useState(1);
-            const [newTournament, setNewTournament] = useState({
-                name: '',
-                type: 'freezeout',
-                buyIn: 50,
-                maxPlayers: 32,
-                stack: 10000
-            });
-            const [blindStructure, setBlindStructure] = useState(() => {
-                const saved = localStorage.getItem('lastBlindStructure');
-                return saved ? JSON.parse(saved) : defaultBlindStructure;
-            });
-            const [tournamentPlayers, setTournamentPlayers] = useState([]);
+        // ═══════════════════════════════════════════════════════════════════
+        // MAIN APP COMPONENT
+        // ═══════════════════════════════════════════════════════════════════
+        function PokerDirector() {
+            const STORAGE_KEY = 'davide_poker_tournaments';
+            const ACTIVE_TOURNAMENT_KEY = 'davide_poker_active_tournament';
 
             // Active tournament
             const [activeTournament, setActiveTournament] = useState(null);
@@ -523,14 +806,16 @@
             const [totalBuyIns, setTotalBuyIns] = useState(0);
             const [totalRebuys, setTotalRebuys] = useState(0);
             const [eliminationHistory, setEliminationHistory] = useState([]);
+            const [killerPoints, setKillerPoints] = useState({}); // {playerId: count}
             const [editingPlayer, setEditingPlayer] = useState(null);
             const [eliminatingPlayer, setEliminatingPlayer] = useState(null);
+            const [rebuyingPlayer, setRebuyingPlayer] = useState(null);
+            const [addingPlayer, setAddingPlayer] = useState(false);
 
             // Timer
             const [currentLevel, setCurrentLevel] = useState(0);
             const [timeLeft, setTimeLeft] = useState(1200);
             const [isRunning, setIsRunning] = useState(false);
-
 
             // Templates
             const [templates, setTemplates] = useState(() => {
@@ -538,23 +823,202 @@
                 return saved ? JSON.parse(saved) : [];
             });
 
-            const fileInputRef = React.useRef(null);
+            // UI State
+            const [currentView, setCurrentView] = useState('dashboard');
+            const [modalType, setModalType] = useState(null);
+            const [showSaveIndicator, setShowSaveIndicator] = useState(false);
+            
+            // Admin/Viewer Mode
+            const [isAdminMode, setIsAdminMode] = useState(false);
+            const [showModeSelection, setShowModeSelection] = useState(true);
+            const ADMIN_PASSWORD = 'kingdavid'; // ⚠️ CAMBIA QUESTA PASSWORD!
 
-            // Load active tournament on mount
+            // Tournament Creation
+            const [createStep, setCreateStep] = useState(1);
+            const [newTournament, setNewTournament] = useState({
+                name: '',
+                type: 'freezeout',
+                buyIn: 50,
+                maxPlayers: 32,
+                stack: 10000,
+                killerPoint: 0
+            });
+            const [tournamentPlayers, setTournamentPlayers] = useState([]);
+            const [savedTournaments, setSavedTournaments] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            // Blind Structure
+            const defaultBlindStructure = [
+                { level: 1, smallBlind: 50, bigBlind: 100, ante: 0, time: 20, isBreak: false },
+                { level: 2, smallBlind: 100, bigBlind: 200, ante: 0, time: 20, isBreak: false },
+                { level: 3, smallBlind: 150, bigBlind: 300, ante: 25, time: 20, isBreak: false },
+                { level: 4, smallBlind: 200, bigBlind: 400, ante: 50, time: 20, isBreak: false },
+                { level: 5, smallBlind: 300, bigBlind: 600, ante: 75, time: 20, isBreak: false },
+                { level: 6, smallBlind: 0, bigBlind: 0, ante: 0, time: 15, isBreak: true, breakName: 'Pausa 15min' },
+                { level: 7, smallBlind: 400, bigBlind: 800, ante: 100, time: 20, isBreak: false },
+                { level: 8, smallBlind: 600, bigBlind: 1200, ante: 150, time: 20, isBreak: false },
+                { level: 9, smallBlind: 800, bigBlind: 1600, ante: 200, time: 20, isBreak: false },
+                { level: 10, smallBlind: 1000, bigBlind: 2000, ante: 300, time: 20, isBreak: false },
+            ];
+
+            const [blindStructure, setBlindStructure] = useState(() => {
+                const saved = localStorage.getItem('lastBlindStructure');
+                return saved ? JSON.parse(saved) : defaultBlindStructure;
+            });
+
+            // ═══════════════════════════════════════════════════════════════════
+            // HELPER FUNCTIONS
+            // ═══════════════════════════════════════════════════════════════════
+            
+            const calculatePrizePool = () => {
+                return (totalBuyIns + totalRebuys) * (activeTournament?.buyIn || newTournament.buyIn);
+            };
+
+            const calculateKillerPool = () => {
+                if (!activeTournament?.killerPoint) return 0;
+                // Pool totale: ogni giocatore contribuisce 1 killer point
+                const totalPlayers = totalBuyIns + totalRebuys;
+                return totalPlayers * activeTournament.killerPoint;
+            };
+
+            const calculateAssignedKillerPool = () => {
+                if (!activeTournament?.killerPoint) return 0;
+                // Pool assegnato: somma dei killer points effettivamente guadagnati
+                const totalKillers = Object.values(killerPoints).reduce((sum, count) => sum + count, 0);
+                return totalKillers * activeTournament.killerPoint;
+            };
+
+            const calculatePayoutPlaces = () => {
+                const totalPlayers = totalBuyIns;
+                if (totalPlayers <= 9) return 3;
+                if (totalPlayers <= 13) return 4;
+                if (totalPlayers <= 18) return 5;
+                return 6;
+            };
+
+            const getPrizeDistribution = () => {
+                const places = calculatePayoutPlaces();
+                const distributions = {
+                    3: [50, 30, 20],
+                    4: [40, 30, 20, 10],
+                    5: [40, 25, 18, 11, 6],
+                    6: [35, 23, 17, 12, 8, 5]
+                };
+                return distributions[places] || distributions[3];
+            };
+
+            const calculatePrizes = () => {
+                const prizePool = calculatePrizePool();
+                const distribution = getPrizeDistribution();
+                
+                // Calcola premi base in percentuale
+                const basePrizes = distribution.map(percentage => 
+                    (prizePool * percentage) / 100
+                );
+                
+                // Arrotonda a multipli di 5
+                const roundedPrizes = basePrizes.map((prize, index) => {
+                    // Gli ultimi posti arrotondano per eccesso, i primi per il più vicino
+                    if (index >= basePrizes.length - 2) {
+                        // Ultimi 2 posti: arrotonda per eccesso
+                        return Math.ceil(prize / 5) * 5;
+                    } else {
+                        // Altri posti: arrotonda al più vicino
+                        return Math.round(prize / 5) * 5;
+                    }
+                });
+                
+                // Calcola differenza rispetto al montepremi totale
+                const total = roundedPrizes.reduce((sum, p) => sum + p, 0);
+                const difference = prizePool - total;
+                
+                // Se c'è differenza, aggiusta il primo premio
+                if (difference !== 0) {
+                    roundedPrizes[0] += difference;
+                }
+                
+                return roundedPrizes;
+            };
+
+            const getFinalStandings = () => {
+                // Ordina per: non eliminati (per chips), poi eliminati (per position desc = eliminati dopo = piazzati meglio)
+                const standings = [...players].sort((a, b) => {
+                    if (a.eliminated && !b.eliminated) return 1;
+                    if (!a.eliminated && b.eliminated) return -1;
+                    if (a.eliminated && b.eliminated) {
+                        const elimA = eliminationHistory.find(e => e.playerId === a.id);
+                        const elimB = eliminationHistory.find(e => e.playerId === b.id);
+                        return (elimB?.position || 0) - (elimA?.position || 0);
+                    }
+                    return b.chips - a.chips;
+                });
+                return standings;
+            };
+
+            const calculateTotalChips = () => {
+                return players.reduce((sum, p) => sum + (p.chips || 0), 0);
+            };
+
+            const openModal = (type, data = null) => {
+                setModalType(type);
+                if (type === 'editPlayer') setEditingPlayer(data);
+                if (type === 'eliminate') setEliminatingPlayer(data);
+                if (type === 'rebuyKiller') setRebuyingPlayer(data);
+                if (type === 'addPlayer') setAddingPlayer(true);
+            };
+
+            const closeModal = () => {
+                setModalType(null);
+                setEditingPlayer(null);
+                setEliminatingPlayer(null);
+                setRebuyingPlayer(null);
+                setAddingPlayer(false);
+            };
+
+            // ═══════════════════════════════════════════════════════════════════
+            // ADMIN AUTHENTICATION
+            // ═══════════════════════════════════════════════════════════════════
+            
+            const selectViewerMode = () => {
+                setIsAdminMode(false);
+                setShowModeSelection(false);
+                localStorage.setItem('pokerMode', 'viewer');
+            };
+
+            const selectAdminMode = (password) => {
+                if (password === ADMIN_PASSWORD) {
+                    setIsAdminMode(true);
+                    setShowModeSelection(false);
+                    localStorage.setItem('pokerMode', 'admin');
+                    return true;
+                }
+                return false;
+            };
+
+            const lockAdmin = () => {
+                setIsAdminMode(false);
+                localStorage.setItem('pokerMode', 'viewer');
+            };
+
+            // Ripristina modalità salvata all'avvio
             useEffect(() => {
-                const savedActive = localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
-                if (savedActive) {
-                    const tournamentData = JSON.parse(savedActive);
-                    loadTournament(tournamentData);
+                const savedMode = localStorage.getItem('pokerMode');
+                if (savedMode === 'admin') {
+                    setIsAdminMode(true);
+                    setShowModeSelection(false);
+                } else if (savedMode === 'viewer') {
+                    setIsAdminMode(false);
+                    setShowModeSelection(false);
                 }
             }, []);
 
-
             // ═══════════════════════════════════════════════════════════════════
-            // FIREBASE REAL-TIME LISTENER - Sincronizzazione automatica
+            // FIREBASE REAL-TIME LISTENER
             // ═══════════════════════════════════════════════════════════════════
-            const isReceivingRef = React.useRef(false);
-            const lastUpdateTimeRef = React.useRef(0);
+            const isReceivingRef = useRef(false);
+            const lastUpdateTimeRef = useRef(0);
 
             useEffect(() => {
                 if (!database || !isFirebaseConfigured) {
@@ -567,30 +1031,55 @@
                 const listener = tournamentRef.on('value', (snapshot) => {
                     const data = snapshot.val();
                     
-                    if (data && data.tournament) {
-                        // Evita loop: controlla che siano passati almeno 2 secondi dall'ultimo aggiornamento
+                    if (data === null) {
+                        setActiveTournament(null);
+                        setPlayers([]);
+                        setTotalBuyIns(0);
+                        setTotalRebuys(0);
+                        setCurrentLevel(0);
+                        setTimeLeft(1200);
+                        setIsRunning(false);
+                        setEliminationHistory([]);
+                        setKillerPoints({});
+                        setBlindStructure(defaultBlindStructure);
+                        setCurrentView('dashboard');
+                        return;
+                    }
+                    
+                    if (data && data.id) {
                         const now = Date.now();
                         if (now - lastUpdateTimeRef.current < 2000) {
-                            return; // Ignora aggiornamenti troppo frequenti
+                            return;
                         }
                         
-                        console.log("📡 Dati ricevuti da Firebase");
-                        
-                        // Aggiorna solo se i dati sono significativamente diversi
                         const currentTime = activeTournament?.lastUpdated || 0;
                         const isNewerData = data.lastUpdated && data.lastUpdated > currentTime + 1000;
                         
-                        if (isNewerData || !activeTournament) {
+                        if (isNewerData) {
                             isReceivingRef.current = true;
                             lastUpdateTimeRef.current = now;
                             
-                            setActiveTournament(data.tournament);
+                            const tournament = {
+                                id: data.id,
+                                name: data.name,
+                                type: data.type,
+                                buyIn: data.buyIn,
+                                maxPlayers: data.maxPlayers,
+                                stack: data.stack,
+                                killerPoint: data.killerPoint || 0,
+                                startTime: data.startTime,
+                                status: data.status,
+                                blindStructure: data.blindStructure
+                            };
+                            
+                            setActiveTournament(tournament);
                             setPlayers(data.players || []);
                             setTotalBuyIns(data.totalBuyIns || 0);
                             setTotalRebuys(data.totalRebuys || 0);
                             setCurrentLevel(data.currentLevel || 0);
                             setTimeLeft(data.timeLeft || 1200);
                             setEliminationHistory(data.eliminationHistory || []);
+                            setKillerPoints(data.killerPoints || {});
                             setBlindStructure(data.blindStructure || defaultBlindStructure);
                             
                             setTimeout(() => {
@@ -600,7 +1089,6 @@
                     }
                 });
 
-                // Cleanup on unmount
                 return () => {
                     if (tournamentRef) {
                         tournamentRef.off('value', listener);
@@ -608,17 +1096,26 @@
                 };
             }, [database, isFirebaseConfigured]);
 
-            // Auto-save tournament every change (con debounce per evitare loop)
+            // Auto-save tournament
             useEffect(() => {
-                if (isReceivingRef.current) return; // Non salvare se stiamo ricevendo da Firebase
+                if (isReceivingRef.current) return;
                 if (!activeTournament || players.length === 0) return;
                 
                 const timeoutId = setTimeout(() => {
                     saveTournamentState();
-                }, 500); // Aspetta 500ms prima di salvare
+                }, 500);
                 
                 return () => clearTimeout(timeoutId);
-            }, [activeTournament?.id, players.length, totalBuyIns, totalRebuys, currentLevel, timeLeft, eliminationHistory.length]);
+            }, [
+                activeTournament?.id, 
+                players, 
+                totalBuyIns, 
+                totalRebuys, 
+                currentLevel, 
+                timeLeft, 
+                eliminationHistory.length,
+                killerPoints
+            ]);
 
             useEffect(() => {
                 localStorage.setItem('lastBlindStructure', JSON.stringify(blindStructure));
@@ -632,6 +1129,7 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(savedTournaments));
             }, [savedTournaments]);
 
+            // Timer logic
             useEffect(() => {
                 let interval;
                 if (isRunning && timeLeft > 0) {
@@ -653,6 +1151,20 @@
                 return () => clearInterval(interval);
             }, [isRunning, timeLeft, currentLevel, blindStructure]);
 
+            // Apri classifica automaticamente quando rimane 1 giocatore
+            useEffect(() => {
+                if (!activeTournament) return;
+                const activePlayers = players.filter(p => !p.eliminated && p.active);
+                if (activePlayers.length === 1 && players.length > 1) {
+                    // Aspetta 2 secondi prima di mostrare la classifica
+                    setTimeout(() => {
+                        if (!modalType) { // Solo se non c'è già un modal aperto
+                            openModal('finalStandings');
+                        }
+                    }, 2000);
+                }
+            }, [players, activeTournament]);
+
             const playSound = () => {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
@@ -670,95 +1182,142 @@
             const formatTime = (seconds) => {
                 const mins = Math.floor(seconds / 60);
                 const secs = seconds % 60;
-                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             };
 
-            const calculatePrizePool = () => {
-                return (totalBuyIns + totalRebuys) * (activeTournament?.buyIn || newTournament.buyIn);
-            };
-
-            const calculateTotalChips = () => {
-                return players.reduce((sum, p) => sum + p.chips, 0);
-            };
-
+            // ═══════════════════════════════════════════════════════════════════
+            // SAVE / LOAD FUNCTIONS
+            // ═══════════════════════════════════════════════════════════════════
+            
             const saveTournamentState = () => {
                 if (!activeTournament) return;
 
-                const tournamentState = {
-                    tournament: activeTournament,
-                    players: players,
-                    totalBuyIns: totalBuyIns,
-                    totalRebuys: totalRebuys,
-                    currentLevel: currentLevel,
-                    timeLeft: timeLeft,
-                    isRunning: isRunning,
-                    eliminationHistory: eliminationHistory,
-                    blindStructure: blindStructure,
-                    lastUpdated: Date.now()
+                const cleanObject = (obj) => {
+                    const cleaned = {};
+                    Object.keys(obj).forEach(key => {
+                        if (obj[key] !== undefined && obj[key] !== null) {
+                            cleaned[key] = obj[key];
+                        }
+                    });
+                    return cleaned;
                 };
 
-                // Save to Firebase (real-time sync)
+                const tournamentState = cleanObject({
+                    id: activeTournament.id,
+                    name: activeTournament.name || 'Torneo',
+                    type: activeTournament.type || 'Freezeout',
+                    buyIn: activeTournament.buyIn || 0,
+                    maxPlayers: activeTournament.maxPlayers || 0,
+                    stack: activeTournament.stack || 0,
+                    killerPoint: activeTournament.killerPoint || 0,
+                    startTime: activeTournament.startTime,
+                    status: activeTournament.status || 'active',
+                    players: players || [],
+                    totalBuyIns: totalBuyIns || 0,
+                    totalRebuys: totalRebuys || 0,
+                    currentLevel: currentLevel || 0,
+                    timeLeft: timeLeft || 1200,
+                    isRunning: isRunning || false,
+                    eliminationHistory: eliminationHistory || [],
+                    killerPoints: killerPoints || {},
+                    blindStructure: blindStructure || [],
+                    lastUpdated: Date.now()
+                });
+
                 if (database && isFirebaseConfigured) {
                     database.ref('activeTournament').set(tournamentState)
                         .then(() => {
-                            console.log("✅ Sincronizzato con Firebase");
+                            // Sincronizzato con successo
                         })
                         .catch(error => {
                             console.error("❌ Errore Firebase:", error);
                         });
                 }
 
-                // Save to localStorage (backup)
-                localStorage.setItem(ACTIVE_TOURNAMENT_KEY, JSON.stringify(tournamentState));
-
-                // Update saved tournaments list
-                const updatedTournaments = savedTournaments.map(t => 
-                    t.id === activeTournament.id ? tournamentState : t
-                );
-                
-                if (!savedTournaments.find(t => t.id === activeTournament.id)) {
-                    updatedTournaments.push(tournamentState);
+                try {
+                    localStorage.setItem(ACTIVE_TOURNAMENT_KEY, JSON.stringify(tournamentState));
+                } catch(e) {
+                    // localStorage pieno, continua con Firebase
                 }
-                
-                setSavedTournaments(updatedTournaments);
 
-                // Show save indicator
                 setShowSaveIndicator(true);
                 setTimeout(() => setShowSaveIndicator(false), 2000);
             };
 
             const loadTournament = (tournamentData) => {
-                setActiveTournament(tournamentData);
+                const importedBlindStructure = tournamentData.blindStructure || defaultBlindStructure;
+                const currentLevelIndex = tournamentData.currentLevel || 0;
+                const currentLevelData = importedBlindStructure[currentLevelIndex];
+                const defaultTimeForLevel = currentLevelData ? currentLevelData.time * 60 : 1200;
+                const importedTimeLeft = tournamentData.timeLeft !== undefined ? tournamentData.timeLeft : defaultTimeForLevel;
+                
+                const tournament = {
+                    id: tournamentData.id || Date.now(),
+                    name: tournamentData.name || 'Torneo Importato',
+                    type: tournamentData.type || 'freezeout',
+                    buyIn: tournamentData.buyIn || 0,
+                    maxPlayers: tournamentData.maxPlayers || 0,
+                    stack: tournamentData.stack || 0,
+                    killerPoint: tournamentData.killerPoint || 0,
+                    startTime: tournamentData.startTime || new Date().toISOString(),
+                    status: tournamentData.status || 'active',
+                    blindStructure: importedBlindStructure
+                };
+                
+                setBlindStructure(importedBlindStructure);
+                setActiveTournament(tournament);
                 setPlayers(tournamentData.players || []);
                 setTotalBuyIns(tournamentData.totalBuyIns || tournamentData.players?.length || 0);
                 setTotalRebuys(tournamentData.totalRebuys || 0);
-                setCurrentLevel(tournamentData.currentLevel || 0);
-                setTimeLeft(tournamentData.timeLeft || 1200);
-                setIsRunning(false);
                 setEliminationHistory(tournamentData.eliminationHistory || []);
-                setBlindStructure(tournamentData.blindStructure || defaultBlindStructure);
+                setKillerPoints(tournamentData.killerPoints || {});
+                setIsRunning(tournamentData.isRunning || false);
+                setCurrentLevel(currentLevelIndex);
+                setTimeLeft(importedTimeLeft);
                 setCurrentView('timer');
+                
+                setTimeout(() => {
+                    saveTournamentState();
+                }, 500);
+                
+                alert(`✅ Torneo "${tournament.name}" importato!\n\n• ${tournamentData.players?.length || 0} giocatori\n• ${importedBlindStructure.length} livelli\n• Livello: ${currentLevelIndex + 1}\n• Tempo: ${Math.floor(importedTimeLeft / 60)}:${String(importedTimeLeft % 60).padStart(2, '0')}`);
             };
 
             const deleteSavedTournament = (tournamentId) => {
                 if (confirm('Eliminare questo torneo salvato?')) {
                     const updated = savedTournaments.filter(t => t.id !== tournamentId);
                     setSavedTournaments(updated);
+                    
                     if (activeTournament?.id === tournamentId) {
+                        if (database && isFirebaseConfigured) {
+                            database.ref('activeTournament').remove();
+                        }
                         localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
                         setActiveTournament(null);
                         setPlayers([]);
+                        setTotalBuyIns(0);
+                        setTotalRebuys(0);
+                        setCurrentLevel(0);
+                        setTimeLeft(1200);
+                        setIsRunning(false);
+                        setEliminationHistory([]);
+                        setKillerPoints({});
+                        setBlindStructure(defaultBlindStructure);
                         setCurrentView('dashboard');
                     }
                 }
             };
 
+            // ═══════════════════════════════════════════════════════════════════
+            // TOURNAMENT MANAGEMENT FUNCTIONS
+            // ═══════════════════════════════════════════════════════════════════
+            
             const addTournamentPlayer = (playerName) => {
                 if (!playerName.trim()) return;
                 const newPlayer = {
                     id: Date.now(),
                     name: playerName.trim(),
-                    chips: newTournament.stack,
+                    chips: 0,
                     table: 0,
                     seat: 0,
                     active: true,
@@ -776,6 +1335,7 @@
                 const playersPerTable = 9;
                 const assigned = tournamentPlayers.map((player, index) => ({
                     ...player,
+                    chips: newTournament.stack,
                     table: Math.floor(index / playersPerTable) + 1,
                     seat: (index % playersPerTable) + 1
                 }));
@@ -806,9 +1366,15 @@
 
             const startTournament = () => {
                 const assignedPlayers = assignTablesToPlayers();
+                
                 const tournament = {
                     id: Date.now(),
-                    ...newTournament,
+                    name: newTournament.name || 'Torneo',
+                    type: newTournament.type || 'Freezeout',
+                    buyIn: newTournament.buyIn || 0,
+                    maxPlayers: newTournament.maxPlayers || 0,
+                    stack: newTournament.stack || 0,
+                    killerPoint: newTournament.killerPoint || 0,
                     startTime: new Date().toISOString(),
                     status: 'active',
                     blindStructure: blindStructure
@@ -819,27 +1385,154 @@
                 setTotalRebuys(0);
                 setActiveTournament(tournament);
                 setEliminationHistory([]);
+                setKillerPoints({});
                 setCurrentView('timer');
                 setTimeLeft(blindStructure[0].time * 60);
                 setCurrentLevel(0);
                 
-                // Save initial state
-                setTimeout(() => saveTournamentState(), 100);
+                setTimeout(() => {
+                    saveTournamentState();
+                }, 100);
             };
 
             const addRebuy = (playerId) => {
+                if (activeTournament?.killerPoint > 0) {
+                    const player = players.find(p => p.id === playerId);
+                    setRebuyingPlayer(player);
+                    openModal('rebuyKiller', player);
+                } else {
+                    executeRebuy(playerId, null);
+                }
+            };
+
+            const executeRebuy = (playerId, killerId) => {
                 setTotalRebuys(totalRebuys + 1);
                 const updatedPlayers = players.map(p => {
                     if (p.id === playerId) {
                         return { 
                             ...p, 
-                            chips: p.chips + (activeTournament?.stack || newTournament.stack),
-                            rebuys: p.rebuys + 1
+                            chips: p.chips + (activeTournament?.stack || 10000),
+                            rebuys: (p.rebuys || 0) + 1
                         };
                     }
                     return p;
                 });
                 setPlayers(updatedPlayers);
+                
+                if (killerId && activeTournament?.killerPoint > 0) {
+                    // Crea NUOVO oggetto per forzare re-render React
+                    setKillerPoints(prev => ({
+                        ...prev,
+                        [killerId]: (prev[killerId] || 0) + 1
+                    }));
+                }
+                
+                closeModal();
+            };
+
+            const resetRebuy = (playerId) => {
+                const player = players.find(p => p.id === playerId);
+                if (!player || !player.rebuys || player.rebuys === 0) {
+                    alert('Questo giocatore non ha rebuy da resettare');
+                    return;
+                }
+                
+                if (!confirm(`Rimuovere tutti i rebuy di ${player.name}? (${player.rebuys} rebuy)`)) {
+                    return;
+                }
+                
+                const stackPerRebuy = activeTournament?.stack || 10000;
+                const chipsToRemove = stackPerRebuy * player.rebuys;
+                
+                setTotalRebuys(Math.max(0, totalRebuys - player.rebuys));
+                
+                const updatedPlayers = players.map(p => {
+                    if (p.id === playerId) {
+                        return {
+                            ...p,
+                            chips: Math.max(0, p.chips - chipsToRemove),
+                            rebuys: 0
+                        };
+                    }
+                    return p;
+                });
+                setPlayers(updatedPlayers);
+            };
+
+            const resetElimination = (playerId) => {
+                const player = players.find(p => p.id === playerId);
+                if (!player || !player.eliminated) {
+                    alert('Questo giocatore non è eliminato');
+                    return;
+                }
+                
+                if (!confirm(`Far rientrare ${player.name} in gioco?`)) {
+                    return;
+                }
+                
+                const activePlayers = players.filter(p => !p.eliminated && p.active);
+                const tablesInUse = Math.max(...activePlayers.map(p => p.table || 1), 1);
+                
+                let assignedTable = 1;
+                let assignedSeat = 1;
+                let foundSpot = false;
+                
+                for (let table = 1; table <= tablesInUse && !foundSpot; table++) {
+                    for (let seat = 1; seat <= 9 && !foundSpot; seat++) {
+                        const occupied = activePlayers.some(p => p.table === table && p.seat === seat);
+                        if (!occupied) {
+                            assignedTable = table;
+                            assignedSeat = seat;
+                            foundSpot = true;
+                        }
+                    }
+                }
+                
+                const updatedPlayers = players.map(p => {
+                    if (p.id === playerId) {
+                        return {
+                            ...p,
+                            eliminated: false,
+                            active: true,
+                            chips: activeTournament?.stack || 10000,
+                            rebuys: 0,
+                            table: assignedTable,
+                            seat: assignedSeat
+                        };
+                    }
+                    return p;
+                });
+                
+                const updatedHistory = eliminationHistory.filter(e => e.playerId !== playerId);
+                
+                setPlayers(updatedPlayers);
+                setEliminationHistory(updatedHistory);
+            };
+
+            const resetTournament = () => {
+                if (!activeTournament) return;
+                
+                if (!confirm('⚠️ ATTENZIONE!\n\nResettare il torneo allo stato iniziale?\n\nQuesta azione:\n- Rimuoverà tutti i rebuy\n- Ripristinerà tutti i giocatori eliminati\n- Resetterà il timer al livello 1\n- Cancellerà lo storico eliminazioni\n- Resetterà killer points\n\nContinuare?')) {
+                    return;
+                }
+                
+                const resetPlayers = players.map(p => ({
+                    ...p,
+                    chips: activeTournament.stack,
+                    rebuys: 0,
+                    eliminated: false,
+                    active: true
+                }));
+                
+                setPlayers(resetPlayers);
+                setTotalRebuys(0);
+                setCurrentLevel(0);
+                setTimeLeft(blindStructure[0].time * 60);
+                setIsRunning(false);
+                setEliminationHistory([]);
+                setKillerPoints({});
+                
+                alert('✅ Torneo resettato allo stato iniziale!');
             };
 
             const eliminatePlayer = (playerId, eliminatedBy) => {
@@ -860,6 +1553,28 @@
                 
                 setPlayers(updatedPlayers);
                 setEliminationHistory([...eliminationHistory, elimination]);
+                
+                if (eliminatedBy && activeTournament?.killerPoint > 0) {
+                    const killer = players.find(p => p.name === eliminatedBy);
+                    if (killer) {
+                        // Crea NUOVO oggetto per forzare re-render React
+                        setKillerPoints(prev => {
+                            const updated = {
+                                ...prev,
+                                [killer.id]: (prev[killer.id] || 0) + 1
+                            };
+                            
+                            // FORZA re-render del Timer triggerando un micro-update
+                            setTimeout(() => {
+                                setShowSaveIndicator(true);
+                                setTimeout(() => setShowSaveIndicator(false), 1);
+                            }, 0);
+                            
+                            return updated;
+                        });
+                    }
+                }
+                
                 closeModal();
             };
 
@@ -870,6 +1585,48 @@
                 setPlayers(updatedPlayers);
                 setEditingPlayer(null);
                 closeModal();
+            };
+
+            const addPlayerDuringTournament = (playerName) => {
+                if (!playerName || !playerName.trim()) {
+                    alert('Inserisci un nome valido');
+                    return;
+                }
+                
+                const activePlayers = players.filter(p => !p.eliminated && p.active);
+                const tablesInUse = Math.max(...activePlayers.map(p => p.table || 1), 1);
+                
+                let assignedTable = 1;
+                let assignedSeat = 1;
+                let foundSpot = false;
+                
+                for (let table = 1; table <= tablesInUse + 1 && !foundSpot; table++) {
+                    for (let seat = 1; seat <= 9 && !foundSpot; seat++) {
+                        const occupied = activePlayers.some(p => p.table === table && p.seat === seat);
+                        if (!occupied) {
+                            assignedTable = table;
+                            assignedSeat = seat;
+                            foundSpot = true;
+                        }
+                    }
+                }
+                
+                const newPlayer = {
+                    id: Date.now(),
+                    name: playerName.trim(),
+                    chips: activeTournament?.stack || 10000,
+                    table: assignedTable,
+                    seat: assignedSeat,
+                    active: true,
+                    rebuys: 0,
+                    eliminated: false
+                };
+                
+                setPlayers([...players, newPlayer]);
+                setTotalBuyIns(totalBuyIns + 1);
+                closeModal();
+                
+                alert(`✅ ${playerName} aggiunto al torneo!\n\nTavolo ${assignedTable}, Posto ${assignedSeat}`);
             };
 
             const updateBlindLevel = (index, field, value) => {
@@ -886,10 +1643,10 @@
                 const lastLevel = blindStructure[blindStructure.length - 1];
                 const newLevel = {
                     level: lastLevel.level + 1,
+                    smallBlind: lastLevel.smallBlind * 1.5,
+                    bigBlind: lastLevel.bigBlind * 1.5,
+                    ante: lastLevel.ante * 1.5,
                     time: 20,
-                    smallBlind: lastLevel.isBreak ? lastLevel.smallBlind : Math.round(lastLevel.smallBlind * 1.5),
-                    bigBlind: lastLevel.isBreak ? lastLevel.bigBlind : Math.round(lastLevel.bigBlind * 1.5),
-                    ante: lastLevel.isBreak ? lastLevel.ante : Math.round(lastLevel.ante * 1.5),
                     isBreak: false
                 };
                 setBlindStructure([...blindStructure, newLevel]);
@@ -897,57 +1654,24 @@
 
             const addBreak = () => {
                 const lastLevel = blindStructure[blindStructure.length - 1];
-                const newBreak = {
+                const breakLevel = {
                     level: lastLevel.level + 1,
-                    time: 15,
                     smallBlind: 0,
                     bigBlind: 0,
                     ante: 0,
+                    time: 15,
                     isBreak: true,
-                    breakName: "Pausa 15min"
+                    breakName: 'Pausa 15min'
                 };
-                setBlindStructure([...blindStructure, newBreak]);
+                setBlindStructure([...blindStructure, breakLevel]);
             };
 
-            const deleteBlindLevel = (index) => {
+            const removeBlindLevel = (index) => {
+                if (blindStructure.length <= 1) return;
                 const updated = blindStructure.filter((_, i) => i !== index);
                 const renumbered = updated.map((level, i) => ({ ...level, level: i + 1 }));
                 setBlindStructure(renumbered);
             };
-
-            const saveTemplate = () => {
-                const template = {
-                    id: Date.now(),
-                    name: newTournament.name || 'Template Senza Nome',
-                    type: newTournament.type,
-                    buyIn: newTournament.buyIn,
-                    maxPlayers: newTournament.maxPlayers,
-                    stack: newTournament.stack,
-                    blindStructure: blindStructure,
-                    createdAt: new Date().toISOString()
-                };
-                setTemplates([...templates, template]);
-                alert('Template salvato!');
-            };
-
-            const loadTemplate = (template) => {
-                setNewTournament({
-                    name: template.name,
-                    type: template.type,
-                    buyIn: template.buyIn,
-                    maxPlayers: template.maxPlayers,
-                    stack: template.stack
-                });
-                setBlindStructure(template.blindStructure);
-                closeModal();
-            };
-
-            const deleteTemplate = (templateId) => {
-                if (confirm('Eliminare questo template?')) {
-                    setTemplates(templates.filter(t => t.id !== templateId));
-                }
-            };
-
 
             const exportTournament = () => {
                 if (!activeTournament) {
@@ -958,13 +1682,23 @@
                 const tournamentData = {
                     version: '1.0',
                     exportDate: new Date().toISOString(),
-                    tournament: activeTournament,
+                    id: activeTournament.id,
+                    name: activeTournament.name,
+                    type: activeTournament.type,
+                    buyIn: activeTournament.buyIn,
+                    maxPlayers: activeTournament.maxPlayers,
+                    stack: activeTournament.stack,
+                    killerPoint: activeTournament.killerPoint || 0,
+                    startTime: activeTournament.startTime,
+                    status: activeTournament.status,
                     players: players,
                     totalBuyIns: totalBuyIns,
                     totalRebuys: totalRebuys,
                     currentLevel: currentLevel,
                     timeLeft: timeLeft,
+                    isRunning: isRunning,
                     eliminationHistory: eliminationHistory,
+                    killerPoints: killerPoints,
                     blindStructure: blindStructure
                 };
 
@@ -973,15 +1707,15 @@
                 const url = URL.createObjectURL(dataBlob);
                 const link = document.createElement('a');
                 link.href = url;
-                const filename = `${activeTournament.name.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+                const safeName = (activeTournament.name || 'torneo').replace(/[^a-z0-9]/gi, '_');
+                const filename = `${safeName}_${new Date().toISOString().split('T')[0]}.json`;
                 link.download = filename;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
-                setShowSaveIndicator(true);
-                setTimeout(() => setShowSaveIndicator(false), 3000);
+                alert('✅ Torneo esportato: ' + filename);
             };
 
             const importTournament = (event) => {
@@ -992,48 +1726,14 @@
                 reader.onload = (e) => {
                     try {
                         const data = JSON.parse(e.target.result);
-                        
-                        setActiveTournament(data.tournament);
-                        setPlayers(data.players);
-                        setTotalBuyIns(data.totalBuyIns);
-                        setTotalRebuys(data.totalRebuys);
-                        setCurrentLevel(data.currentLevel);
-                        setTimeLeft(data.timeLeft);
-                        setEliminationHistory(data.eliminationHistory || []);
-                        setBlindStructure(data.blindStructure);
-                        setIsRunning(false);
-                        setCurrentView('timer');
-                        
-                        alert('✅ Torneo importato con successo!');
+                        loadTournament(data);
                     } catch (error) {
-                        alert('❌ Errore: file non valido');
-                        console.error(error);
+                        alert('❌ Errore: file non valido\n\n' + error.message);
+                        console.error('Errore import:', error);
                     }
                 };
                 reader.readAsText(file);
                 event.target.value = '';
-            };
-
-
-            const openModal = (type, data = null) => {
-                setModalType(type);
-                if (type === 'editPlayer') {
-                    setEditingPlayer(data);
-                } else if (type === 'eliminate') {
-                    setEliminatingPlayer(data);
-                }
-                setShowModal(true);
-            };
-
-            const closeModal = () => {
-                setShowModal(false);
-                setModalType(null);
-                setEditingPlayer(null);
-                setEliminatingPlayer(null);
-            };
-
-            const handleDragStart = (e, player) => {
-                e.dataTransfer.setData('playerId', player.id);
             };
 
             const handleDrop = (e, targetTable, targetSeat) => {
@@ -1054,98 +1754,139 @@
                 setPlayers(updatedPlayers);
             };
 
-            const renderDashboard = () => (
-                <div className="dashboard">
-                    <h1 className="section-title">🎯 Tornei</h1>
-                    <div className="tournament-grid">
-                        <div className="tournament-card create" onClick={() => {
-                            setCreateStep(1);
-                            setTournamentPlayers([]);
-                            setNewTournament({
-                                name: '',
-                                type: 'freezeout',
-                                buyIn: 50,
-                                maxPlayers: 32,
-                                stack: 10000
-                            });
-                            setCurrentView('create');
-                        }}>
-                            <div className="create-icon">➕</div>
-                            <div className="create-text">Crea Nuovo Torneo</div>
-                        </div>
-                        
-                        {savedTournaments.filter(t => t.status === 'active').map(tournament => (
-                            <div key={tournament.id} className="tournament-card">
-                                <div className="tournament-status status-active">Attivo</div>
-                                <h3 className="tournament-name">{tournament.name}</h3>
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                                    <div className="info-row">
-                                        <span className="info-label">Buy-in:</span>
-                                        <span className="info-value">€{tournament.buyIn}</span>
+            // ═══════════════════════════════════════════════════════════════════
+            // RENDER FUNCTIONS
+            // ═══════════════════════════════════════════════════════════════════
+
+            const renderDashboard = () => {
+                const allTournaments = [];
+                
+                if (activeTournament) {
+                    const activePlayers = players.filter(p => !p.eliminated).length;
+                    allTournaments.push({
+                        id: activeTournament.id,
+                        name: activeTournament.name,
+                        buyIn: activeTournament.buyIn,
+                        killerPoint: activeTournament.killerPoint,
+                        status: 'active',
+                        players: players,
+                        activePlayers: activePlayers,
+                        totalPlayers: players.length,
+                        currentLevel: currentLevel,
+                        isActive: true
+                    });
+                }
+                
+                const otherSaved = savedTournaments.filter(t => t.id !== activeTournament?.id);
+                allTournaments.push(...otherSaved);
+                
+                return (
+                    <div className="dashboard">
+                        <h1 className="section-title">🎯 Tornei</h1>
+                        <div className="tournament-grid">
+                            {isAdminMode && (
+                                <div className="tournament-card create" onClick={() => {
+                                    setCreateStep(1);
+                                    setTournamentPlayers([]);
+                                    setNewTournament({
+                                        name: '',
+                                        type: 'freezeout',
+                                        buyIn: 50,
+                                        maxPlayers: 32,
+                                        stack: 10000,
+                                        killerPoint: 0
+                                    });
+                                    setCurrentView('create');
+                                }}>
+                                    <div className="create-icon">➕</div>
+                                    <div className="create-text">Crea Nuovo Torneo</div>
+                                </div>
+                            )}
+                            
+                            {allTournaments.map(tournament => (
+                                <div key={tournament.id} className="tournament-card">
+                                    <div className={`tournament-status ${tournament.isActive ? 'status-active' : 'status-completed'}`}>
+                                        {tournament.isActive ? '🔴 Attivo' : 'Salvato'}
                                     </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Giocatori:</span>
-                                        <span className="info-value">
-                                            {tournament.players?.filter(p => !p.eliminated).length || 0}/{tournament.players?.length || 0}
-                                        </span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Livello:</span>
-                                        <span className="info-value">{(tournament.currentLevel || 0) + 1}</span>
-                                    </div>
-                                    <div style={{display: 'flex', gap: '0.5rem', marginTop: '1rem'}}>
-                                        <button 
-                                            className="btn btn-primary" 
-                                            style={{flex: 1, padding: '0.5rem'}}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                loadTournament(tournament);
-                                            }}
-                                        >
-                                            Continua
-                                        </button>
-                                        <button 
-                                            className="btn btn-danger"
-                                            style={{padding: '0.5rem 1rem'}}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                deleteSavedTournament(tournament.id);
-                                            }}
-                                        >
-                                            🗑️
-                                        </button>
+                                    <h3 className="tournament-name">{tournament.name || 'Torneo'}</h3>
+                                    <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                        <div className="info-row">
+                                            <span className="info-label">Buy-in:</span>
+                                            <span className="info-value">€{tournament.buyIn || 0}</span>
+                                        </div>
+                                        {tournament.killerPoint > 0 && (
+                                            <div className="info-row">
+                                                <span className="info-label">💀 Killer Point:</span>
+                                                <span className="info-value">€{tournament.killerPoint}</span>
+                                            </div>
+                                        )}
+                                        <div className="info-row">
+                                            <span className="info-label">Giocatori:</span>
+                                            <span className="info-value">
+                                                {tournament.activePlayers || 0}/{tournament.totalPlayers || 0}
+                                            </span>
+                                        </div>
+                                        <div className="info-row">
+                                            <span className="info-label">Livello:</span>
+                                            <span className="info-value">{(tournament.currentLevel || 0) + 1}</span>
+                                        </div>
+                                        <div style={{display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap'}}>
+                                            <button 
+                                                className="btn btn-primary" 
+                                                style={{flex: '1 1 100%', padding: '0.5rem'}}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (tournament.isActive) {
+                                                        setCurrentView('timer');
+                                                    } else {
+                                                        loadTournament(tournament);
+                                                    }
+                                                }}
+                                            >
+                                                {tournament.isActive ? '▶ Vai al Timer' : '📂 Carica'}
+                                            </button>
+                                            <button 
+                                                className="btn btn-warning"
+                                                style={{flex: 1, padding: '0.5rem', backgroundColor: '#ff9800', color: 'white'}}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    resetTournament();
+                                                }}
+                                            >
+                                                🔄 Reset
+                                            </button>
+                                            <button 
+                                                className="btn btn-danger"
+                                                style={{flex: 1, padding: '0.5rem'}}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    deleteSavedTournament(tournament.id);
+                                                }}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            );
+                );
+            };
 
             const renderCreateTournament = () => (
-                <div className="create-tournament">
+                <div className="create-tournament" style={{padding: '2rem 1rem'}}>
                     <h1 className="section-title">Crea Nuovo Torneo</h1>
                     <div className="stepper">
-                        {[1,2,3,4,5].map(num => (
-                            <div key={num} className={`step ${createStep >= num ? 'active' : ''} ${createStep > num ? 'completed' : ''}`}>
-                                <div className="step-number">{num}</div>
-                                <div className="step-label">
-                                    {num === 1 ? 'Info' : num === 2 ? 'Blind' : num === 3 ? 'Giocatori' : num === 4 ? 'Avanzate' : 'Riepilogo'}
-                                </div>
-                            </div>
-                        ))}
+                        <div className={`step ${createStep >= 1 ? 'active' : ''} ${createStep > 1 ? 'completed' : ''}`}>1</div>
+                        <div className={`step ${createStep >= 2 ? 'active' : ''} ${createStep > 2 ? 'completed' : ''}`}>2</div>
+                        <div className={`step ${createStep >= 3 ? 'active' : ''} ${createStep > 3 ? 'completed' : ''}`}>3</div>
+                        <div className={`step ${createStep >= 4 ? 'active' : ''}`}>4</div>
                     </div>
 
                     <div className="form-section">
                         {createStep === 1 && (
                             <>
-                                {templates.length > 0 && (
-                                    <div style={{marginBottom: '2rem'}}>
-                                        <button className="btn btn-secondary" onClick={() => openModal('templates')}>
-                                            📋 Carica Template
-                                        </button>
-                                    </div>
-                                )}
                                 <div className="form-group">
                                     <label className="form-label">Nome Torneo</label>
                                     <input
@@ -1174,6 +1915,19 @@
                                         onChange={(e) => setNewTournament({...newTournament, stack: parseInt(e.target.value) || 0})}
                                     />
                                 </div>
+                                <div className="form-group">
+                                    <label className="form-label">💀 Killer Point (€)</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={newTournament.killerPoint || 0}
+                                        onChange={(e) => setNewTournament({...newTournament, killerPoint: parseInt(e.target.value) || 0})}
+                                        placeholder="Es. 5 (lascia 0 per disabilitare)"
+                                    />
+                                    <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem'}}>
+                                        Importo per ogni eliminazione. Crea un montepremi separato per i killer points.
+                                    </div>
+                                </div>
                             </>
                         )}
 
@@ -1197,7 +1951,7 @@
                                                         />
                                                     </div>
                                                     <div className="blind-input-group">
-                                                        <div className="blind-input-label">Durata (min)</div>
+                                                        <div className="blind-input-label">Minuti</div>
                                                         <input
                                                             type="number"
                                                             className="blind-input-small"
@@ -1209,16 +1963,7 @@
                                             ) : (
                                                 <div className="blind-inputs">
                                                     <div className="blind-input-group">
-                                                        <div className="blind-input-label">Tempo (min)</div>
-                                                        <input
-                                                            type="number"
-                                                            className="blind-input-small"
-                                                            value={level.time}
-                                                            onChange={(e) => updateBlindLevel(index, 'time', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="blind-input-group">
-                                                        <div className="blind-input-label">SB</div>
+                                                        <div className="blind-input-label">Small</div>
                                                         <input
                                                             type="number"
                                                             className="blind-input-small"
@@ -1227,7 +1972,7 @@
                                                         />
                                                     </div>
                                                     <div className="blind-input-group">
-                                                        <div className="blind-input-label">BB</div>
+                                                        <div className="blind-input-label">Big</div>
                                                         <input
                                                             type="number"
                                                             className="blind-input-small"
@@ -1244,123 +1989,146 @@
                                                             onChange={(e) => updateBlindLevel(index, 'ante', e.target.value)}
                                                         />
                                                     </div>
+                                                    <div className="blind-input-group">
+                                                        <div className="blind-input-label">Minuti</div>
+                                                        <input
+                                                            type="number"
+                                                            className="blind-input-small"
+                                                            value={level.time}
+                                                            onChange={(e) => updateBlindLevel(index, 'time', e.target.value)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             )}
-                                            <button className="icon-btn delete" onClick={() => deleteBlindLevel(index)}>🗑️</button>
+                                            <button 
+                                                className="icon-btn delete"
+                                                onClick={() => removeBlindLevel(index)}
+                                                style={{marginLeft: '0.5rem'}}
+                                            >
+                                                🗑️
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
                                 <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
-                                    <button className="add-level-btn" onClick={addBlindLevel}>➕ Livello</button>
-                                    <button className="add-level-btn" onClick={addBreak}>☕ Pausa</button>
+                                    <button className="btn btn-secondary" onClick={addBlindLevel}>
+                                        ➕ Livello
+                                    </button>
+                                    <button className="btn btn-secondary" onClick={addBreak}>
+                                        ☕ Pausa
+                                    </button>
                                 </div>
                             </div>
                         )}
 
                         {createStep === 3 && (
                             <div>
-                                <h3 style={{marginBottom: '1rem', color: 'var(--poker-gold)'}}>Registra Giocatori</h3>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const input = e.target.elements.playerName;
-                                    addTournamentPlayer(input.value);
-                                    input.value = '';
-                                }} style={{display: 'flex', gap: '0.5rem', marginBottom: '1.5rem'}}>
+                                <h3 style={{marginBottom: '1rem', color: 'var(--poker-gold)'}}>Aggiungi Giocatori</h3>
+                                <div className="form-group">
                                     <input
                                         type="text"
-                                        name="playerName"
                                         className="form-input"
                                         placeholder="Nome giocatore"
-                                        style={{flex: 1}}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                addTournamentPlayer(e.target.value);
+                                                e.target.value = '';
+                                            }
+                                        }}
                                     />
-                                    <button type="submit" className="btn btn-primary">Aggiungi</button>
-                                </form>
-                                <h4 style={{marginBottom: '1rem'}}>Giocatori ({tournamentPlayers.length})</h4>
-                                {tournamentPlayers.length === 0 ? (
-                                    <p style={{color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem'}}>
-                                        Nessun giocatore
-                                    </p>
-                                ) : (
-                                    <div className="players-list">
-                                        {tournamentPlayers.map(player => (
-                                            <div key={player.id} className="player-item">
-                                                <span className="player-name">{player.name}</span>
-                                                <button className="icon-btn delete" onClick={() => removeTournamentPlayer(player.id)}>
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {createStep === 4 && (
-                            <div>
-                                <h3 style={{marginBottom: '1.5rem', color: 'var(--poker-gold)'}}>Impostazioni Avanzate</h3>
-                                <p style={{color: 'var(--text-secondary)'}}>
-                                    Configurazioni aggiuntive saranno disponibili in futuro
-                                </p>
-                            </div>
-                        )}
-
-                        {createStep === 5 && (
-                            <div>
-                                <h3 style={{marginBottom: '1.5rem', color: 'var(--poker-gold)'}}>Riepilogo</h3>
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                                    <div className="info-row">
-                                        <span className="info-label">Nome:</span>
-                                        <span className="info-value">{newTournament.name || 'N/A'}</span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Buy-in:</span>
-                                        <span className="info-value">€{newTournament.buyIn}</span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Stack:</span>
-                                        <span className="info-value">{newTournament.stack.toLocaleString()}</span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Giocatori:</span>
-                                        <span className="info-value">{tournamentPlayers.length}</span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Montepremi:</span>
-                                        <span className="info-value">€{(tournamentPlayers.length * newTournament.buyIn).toLocaleString()}</span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Chips Totali:</span>
-                                        <span className="info-value">{(tournamentPlayers.length * newTournament.stack).toLocaleString()}</span>
-                                    </div>
+                                </div>
+                                <div style={{marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem'}}>
+                                    Premi Invio per aggiungere
+                                </div>
+                                <div className="player-list">
+                                    {tournamentPlayers.map(player => (
+                                        <div key={player.id} className="player-item" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                            <span className="player-name">{player.name}</span>
+                                            <button 
+                                                className="icon-btn delete"
+                                                onClick={() => removeTournamentPlayer(player.id)}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{marginTop: '1rem', padding: '1rem', background: 'var(--card-bg)', borderRadius: '8px'}}>
+                                    <strong>Totale giocatori: {tournamentPlayers.length}</strong>
                                 </div>
                             </div>
                         )}
 
-                        <div className="form-actions">
-                            {createStep > 1 && (
-                                <button className="btn btn-secondary" onClick={() => setCreateStep(createStep - 1)}>
-                                    Indietro
-                                </button>
-                            )}
-                            {createStep < 5 ? (
-                                <button className="btn btn-primary" onClick={() => setCreateStep(createStep + 1)}>
-                                    Avanti
-                                </button>
-                            ) : (
-                                <>
-                                    <button className="btn btn-secondary" onClick={saveTemplate}>
-                                        💾 Salva Template
-                                    </button>
-                                    <button 
-                                        className="btn btn-primary" 
-                                        onClick={startTournament}
-                                        disabled={tournamentPlayers.length === 0}
-                                    >
-                                        🚀 Avvia Torneo
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                        {createStep === 4 && (
+                            <div style={{textAlign: 'center'}}>
+                                <h3 style={{marginBottom: '2rem', color: 'var(--poker-gold)'}}>Riepilogo Torneo</h3>
+                                <div style={{background: 'var(--card-bg)', padding: '2rem', borderRadius: '12px', marginBottom: '2rem'}}>
+                                    <div style={{marginBottom: '1rem'}}>
+                                        <strong>Nome:</strong> {newTournament.name || 'Torneo'}
+                                    </div>
+                                    <div style={{marginBottom: '1rem'}}>
+                                        <strong>Buy-in:</strong> €{newTournament.buyIn}
+                                    </div>
+                                    <div style={{marginBottom: '1rem'}}>
+                                        <strong>Stack:</strong> {newTournament.stack.toLocaleString()}
+                                    </div>
+                                    {newTournament.killerPoint > 0 && (
+                                        <div style={{marginBottom: '1rem', color: '#ff6b6b'}}>
+                                            <strong>💀 Killer Point:</strong> €{newTournament.killerPoint}
+                                        </div>
+                                    )}
+                                    <div style={{marginBottom: '1rem'}}>
+                                        <strong>Giocatori:</strong> {tournamentPlayers.length}
+                                    </div>
+                                    <div style={{marginBottom: '1rem'}}>
+                                        <strong>Livelli blind:</strong> {blindStructure.length}
+                                    </div>
+                                    <div style={{fontSize: '1.5rem', color: 'var(--poker-gold)', marginTop: '1.5rem'}}>
+                                        <strong>Montepremi: €{tournamentPlayers.length * newTournament.buyIn}</strong>
+                                    </div>
+                                    {newTournament.killerPoint > 0 && (
+                                        <div style={{fontSize: '1.2rem', color: '#ff6b6b', marginTop: '1rem'}}>
+                                            <strong>💀 Pool Killer: €{tournamentPlayers.length * newTournament.killerPoint}</strong>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+                        {createStep > 1 && (
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={() => setCreateStep(createStep - 1)}
+                            >
+                                ← Indietro
+                            </button>
+                        )}
+                        <button 
+                            className="btn btn-secondary"
+                            onClick={() => setCurrentView('dashboard')}
+                        >
+                            Annulla
+                        </button>
+                        {createStep < 4 ? (
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => setCreateStep(createStep + 1)}
+                                disabled={createStep === 3 && tournamentPlayers.length === 0}
+                                style={{flex: 1}}
+                            >
+                                Avanti →
+                            </button>
+                        ) : (
+                            <button 
+                                className="btn btn-primary"
+                                onClick={startTournament}
+                                style={{flex: 1}}
+                            >
+                                🎰 Avvia Torneo
+                            </button>
+                        )}
                     </div>
                 </div>
             );
@@ -1368,6 +2136,8 @@
             const renderTimer = () => {
                 const level = blindStructure[currentLevel];
                 const prizePool = calculatePrizePool();
+                const killerPool = calculateKillerPool();
+                const assignedKillerPool = calculateAssignedKillerPool();
                 
                 return (
                     <div className="timer-container">
@@ -1404,84 +2174,192 @@
                             )}
                         </div>
 
-                        <div className="timer-controls">
-                            <button className="btn btn-primary timer-btn" onClick={() => setIsRunning(!isRunning)}>
-                                {isRunning ? '⏸ Pausa' : '▶ Avvia'}
-                            </button>
-                            <button
-                                className="btn btn-secondary timer-btn"
-                                onClick={() => {
-                                    if (currentLevel > 0) {
-                                        setCurrentLevel(currentLevel - 1);
-                                        setTimeLeft(blindStructure[currentLevel - 1].time * 60);
-                                    }
-                                }}
-                                disabled={currentLevel === 0}
-                            >
-                                ⏮ Prec.
-                            </button>
-                            <button
-                                className="btn btn-secondary timer-btn"
-                                onClick={() => {
-                                    if (currentLevel < blindStructure.length - 1) {
-                                        setCurrentLevel(currentLevel + 1);
-                                        setTimeLeft(blindStructure[currentLevel + 1].time * 60);
-                                    }
-                                }}
-                                disabled={currentLevel === blindStructure.length - 1}
-                            >
-                                Succ. ⏭
-                            </button>
-                            <button className="btn btn-primary timer-btn" onClick={saveTournamentState}>
-                                💾 Salva
-                            </button>
-                        </div>
-
-                        <div className="prize-summary">
-                            <div className="prize-pool-total">
-                                <div className="prize-pool-label">Montepremi Totale</div>
-                                <div className="prize-pool-amount">€{prizePool.toLocaleString()}</div>
-                                <div style={{fontSize: '0.85rem', marginTop: '0.5rem', color: 'var(--text-secondary)'}}>
-                                    Buy-ins: {totalBuyIns} | Rebuys: {totalRebuys} | Chips: {calculateTotalChips().toLocaleString()}
+                        <div className="prize-pool-section">
+                            <h3 style={{color: 'var(--poker-gold)', marginBottom: '1rem'}}>💰 Montepremi</h3>
+                            <div className="prize-pool-grid">
+                                <div className="prize-item">
+                                    <div className="prize-label">Montepremi Totale</div>
+                                    <div className="prize-value">€{prizePool}</div>
+                                </div>
+                                <div className="prize-item">
+                                    <div className="prize-label">Buy-ins</div>
+                                    <div className="prize-value">{totalBuyIns}</div>
+                                </div>
+                                <div className="prize-item">
+                                    <div className="prize-label">Rebuy</div>
+                                    <div className="prize-value">{totalRebuys}</div>
+                                </div>
+                                <div className="prize-item">
+                                    <div className="prize-label">Giocatori Rimasti</div>
+                                    <div className="prize-value">{players.filter(p => !p.eliminated).length}</div>
                                 </div>
                             </div>
-                            <div className="prize-breakdown">
-                                {payoutStructure.map(payout => {
-                                    const amount = Math.floor((prizePool * payout.percentage) / 100);
-                                    return (
-                                        <div key={payout.position} className="prize-item">
-                                            <div className="prize-position">
-                                                {payout.position === 1 ? '🏆 1°' : `${payout.position}°`}
+                            
+                            {/* Riga Premi ITM */}
+                            <div style={{
+                                marginTop: '1.5rem',
+                                padding: '1rem',
+                                background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                                border: '2px solid rgba(255, 215, 0, 0.3)',
+                                borderRadius: '12px'
+                            }}>
+                                <div style={{
+                                    fontSize: '0.9rem',
+                                    color: 'var(--text-secondary)',
+                                    marginBottom: '0.75rem',
+                                    textAlign: 'center'
+                                }}>
+                                    🏆 Premi ({calculatePayoutPlaces()} posti a premio)
+                                </div>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    gap: '1.5rem',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    {calculatePrizes().map((prize, index) => {
+                                        const position = index + 1;
+                                        const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}°`;
+                                        return (
+                                            <div key={index} style={{textAlign: 'center'}}>
+                                                <div style={{
+                                                    fontSize: '1.1rem',
+                                                    fontWeight: '700',
+                                                    color: position <= 3 ? 'var(--poker-gold)' : 'var(--text-primary)',
+                                                    marginBottom: '0.25rem'
+                                                }}>
+                                                    {medal}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '1.2rem',
+                                                    fontWeight: '700',
+                                                    color: 'var(--poker-gold)'
+                                                }}>
+                                                    €{prize}
+                                                </div>
                                             </div>
-                                            <div className="prize-amount">€{amount.toLocaleString()}</div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </div>
                             </div>
+
+                            {activeTournament?.killerPoint > 0 && (
+                                <div className="killer-pool" style={{marginTop: '1rem'}}>
+                                    <div className="killer-pool-label">💀 Pool Killer Points</div>
+                                    <div className="killer-pool-value">€{assignedKillerPool} / €{killerPool}</div>
+                                    <div style={{fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.25rem'}}>
+                                        Assegnati / Totale
+                                    </div>
+                                </div>
+                            )}
                         </div>
+
+                        {isAdminMode && (
+                            <div className="timer-controls">
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={() => setIsRunning(!isRunning)}
+                                >
+                                    {isRunning ? '⏸ Pausa' : '▶ Play'}
+                                </button>
+                                <button 
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        if (currentLevel > 0) {
+                                            setCurrentLevel(currentLevel - 1);
+                                            setTimeLeft(blindStructure[currentLevel - 1].time * 60);
+                                            setIsRunning(false);
+                                        }
+                                    }}
+                                    disabled={currentLevel === 0}
+                                >
+                                    ⏮ Livello Prec
+                                </button>
+                                <button 
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        if (currentLevel < blindStructure.length - 1) {
+                                            setCurrentLevel(currentLevel + 1);
+                                            setTimeLeft(blindStructure[currentLevel + 1].time * 60);
+                                            setIsRunning(false);
+                                        }
+                                    }}
+                                    disabled={currentLevel === blindStructure.length - 1}
+                                >
+                                    ⏭ Livello Succ
+                                </button>
+                                <button 
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        setTimeLeft(blindStructure[currentLevel].time * 60);
+                                        setIsRunning(false);
+                                    }}
+                                >
+                                    🔄 Reset Timer
+                                </button>
+                            </div>
+                        )}
                     </div>
                 );
             };
 
             const renderPlayers = () => {
-                const activePlayers = players.filter(p => !p.eliminated);
-                const sortedPlayers = [...activePlayers].sort((a, b) => b.chips - a.chips);
-                const eliminatedPlayers = players.filter(p => p.eliminated).sort((a, b) => {
-                    const elimA = eliminationHistory.find(e => e.playerId === a.id);
-                    const elimB = eliminationHistory.find(e => e.playerId === b.id);
-                    return new Date(elimB.timestamp) - new Date(elimA.timestamp);
-                });
+                const sortedPlayers = [...players]
+                    .filter(p => !p.eliminated)
+                    .sort((a, b) => b.chips - a.chips);
+                
+                const eliminatedPlayers = players.filter(p => p.eliminated);
+                
+                const killerLeaderboard = Object.entries(killerPoints)
+                    .map(([playerId, count]) => {
+                        const player = players.find(p => p.id === parseInt(playerId));
+                        return {
+                            playerId: parseInt(playerId),
+                            playerName: player?.name || 'Unknown',
+                            count: count,
+                            prize: count * (activeTournament?.killerPoint || 0)
+                        };
+                    })
+                    .sort((a, b) => b.count - a.count);
 
                 return (
                     <div style={{padding: '2rem 1rem'}}>
-                        <h1 className="section-title">👥 Lista Giocatori</h1>
-                        <div style={{marginBottom: '2rem', display: 'flex', gap: '2rem', flexWrap: 'wrap'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap'}}>
+                            <h1 className="section-title" style={{marginBottom: 0}}>👥 Giocatori</h1>
+                            <div style={{display: 'flex', gap: '0.5rem'}}>
+                                <button 
+                                    className="btn btn-secondary"
+                                    onClick={() => openModal('finalStandings')}
+                                    style={{background: 'linear-gradient(135deg, var(--poker-gold) 0%, #ffed4e 100%)', color: 'var(--bg-primary)'}}
+                                >
+                                    🏆 Classifica
+                                </button>
+                                {isAdminMode && (
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => openModal('addPlayer')}
+                                    >
+                                        ➕ Aggiungi Giocatore
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: '1rem',
+                            marginBottom: '2rem',
+                            padding: '1.5rem',
+                            background: 'var(--card-bg)',
+                            borderRadius: '12px'
+                        }}>
                             <div style={{textAlign: 'center'}}>
                                 <div style={{fontSize: '2rem', fontWeight: '700', color: 'var(--poker-gold)'}}>
-                                    {activePlayers.length}
+                                    €{calculatePrizePool()}
                                 </div>
                                 <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>
-                                    Giocatori Attivi
+                                    Montepremi
                                 </div>
                             </div>
                             <div style={{textAlign: 'center'}}>
@@ -1500,6 +2378,16 @@
                                     Rebuy Totali
                                 </div>
                             </div>
+                            {activeTournament?.killerPoint > 0 && (
+                                <div style={{textAlign: 'center'}}>
+                                    <div style={{fontSize: '2rem', fontWeight: '700', color: '#ff6b6b'}}>
+                                        €{calculateKillerPool()}
+                                    </div>
+                                    <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>
+                                        💀 Pool Killer
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <h3 style={{marginBottom: '1rem', color: 'var(--poker-gold)'}}>Giocatori Attivi</h3>
@@ -1521,27 +2409,34 @@
                                             width: '40px',
                                             height: '40px',
                                             borderRadius: '50%',
-                                            background: index === 0 ? 'linear-gradient(135deg, var(--poker-gold) 0%, #F4D03F 100%)' : 'linear-gradient(135deg, var(--poker-green) 0%, var(--poker-gold) 100%)',
+                                            background: index === 0 ? 'var(--poker-gold)' : 'var(--bg-secondary)',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            fontFamily: 'Barlow, sans-serif',
-                                            fontSize: '0.9rem',
                                             fontWeight: '700',
-                                            color: 'var(--dark-bg)'
+                                            color: index === 0 ? 'var(--bg-primary)' : 'var(--text-primary)'
                                         }}>
-                                            {player.name.split(' ').map(n => n[0]).join('')}
+                                            {index === 0 ? '🏆' : index + 1}
                                         </div>
                                         <div style={{flex: 1}}>
-                                            <div style={{fontWeight: '600', fontSize: '1rem', marginBottom: '0.25rem'}}>
-                                                {index === 0 && '🏆 '}
+                                            <div style={{
+                                                fontSize: '1.1rem',
+                                                fontWeight: '700',
+                                                color: 'var(--poker-gold)'
+                                            }}>
                                                 {player.name}
                                             </div>
-                                            <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>
-                                                Tavolo {player.table} - Posto {player.seat}
+                                            <div style={{
+                                                fontSize: '0.85rem',
+                                                color: 'var(--text-secondary)',
+                                                display: 'flex',
+                                                gap: '1rem',
+                                                marginTop: '0.25rem'
+                                            }}>
+                                                <span>Tavolo {player.table}-{player.seat}</span>
                                                 {player.rebuys > 0 && (
-                                                    <span style={{marginLeft: '0.5rem', color: 'var(--accent-blue)', fontWeight: '600'}}>
-                                                        • {player.rebuys} Rebuy
+                                                    <span style={{color: 'var(--accent-blue)'}}>
+                                                        🔄 {player.rebuys} Rebuy
                                                     </span>
                                                 )}
                                             </div>
@@ -1557,29 +2452,41 @@
                                         }}>
                                             {player.chips.toLocaleString()}
                                         </div>
-                                        <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
-                                            <button 
-                                                className="icon-btn"
-                                                onClick={() => openModal('editPlayer', player)}
-                                                title="Modifica nome"
-                                            >
-                                                ✏️
-                                            </button>
-                                            <button 
-                                                className="btn btn-primary"
-                                                style={{padding: '0.5rem 1rem', fontSize: '0.85rem'}}
-                                                onClick={() => addRebuy(player.id)}
-                                            >
-                                                💰 Rebuy
-                                            </button>
-                                            <button 
-                                                className="btn btn-danger"
-                                                style={{padding: '0.5rem 1rem', fontSize: '0.85rem'}}
-                                                onClick={() => openModal('eliminate', player)}
-                                            >
-                                                ❌ Eliminato
-                                            </button>
-                                        </div>
+                                        {isAdminMode && (
+                                            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+                                                <button 
+                                                    className="icon-btn"
+                                                    onClick={() => openModal('editPlayer', player)}
+                                                    title="Modifica nome"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button 
+                                                    className="btn btn-primary"
+                                                    style={{padding: '0.5rem 1rem', fontSize: '0.85rem'}}
+                                                    onClick={() => addRebuy(player.id)}
+                                                >
+                                                    💰 Rebuy
+                                                </button>
+                                                {player.rebuys > 0 && (
+                                                    <button 
+                                                        className="btn btn-warning"
+                                                        style={{padding: '0.5rem 1rem', fontSize: '0.85rem', backgroundColor: '#ff9800', color: 'white'}}
+                                                        onClick={() => resetRebuy(player.id)}
+                                                        title="Rimuovi rebuy"
+                                                    >
+                                                        ↩️ Reset Rebuy
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    className="btn btn-danger"
+                                                    style={{padding: '0.5rem 1rem', fontSize: '0.85rem'}}
+                                                    onClick={() => openModal('eliminate', player)}
+                                                >
+                                                    ❌ Eliminato
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -1592,7 +2499,7 @@
                                     {eliminatedPlayers.map(player => {
                                         const elimination = eliminationHistory.find(e => e.playerId === player.id);
                                         return (
-                                            <div key={player.id} className="player-item eliminated">
+                                            <div key={player.id} className="player-item eliminated" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                                 <div>
                                                     <span className="player-name">{player.name}</span>
                                                     <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}}>
@@ -1601,11 +2508,42 @@
                                                         {elimination?.timestamp && ` ${new Date(elimination.timestamp).toLocaleTimeString('it-IT')}`}
                                                     </div>
                                                 </div>
+                                                {isAdminMode && (
+                                                    <button 
+                                                        className="btn btn-success"
+                                                        style={{padding: '0.5rem 1rem', fontSize: '0.85rem', backgroundColor: '#4caf50', color: 'white'}}
+                                                        onClick={() => resetElimination(player.id)}
+                                                        title="Fai rientrare in gioco"
+                                                    >
+                                                        ♻️ Ripristina
+                                                    </button>
+                                                )}
                                             </div>
                                         );
                                     })}
                                 </div>
                             </>
+                        )}
+
+                        {activeTournament?.killerPoint > 0 && killerLeaderboard.length > 0 && (
+                            <div className="killer-stats">
+                                <div className="killer-stats-title">
+                                    💀 Classifica Killer Points
+                                </div>
+                                <div className="killer-leaderboard">
+                                    {killerLeaderboard.map((entry, index) => (
+                                        <div key={entry.playerId} className="killer-entry">
+                                            <div className="killer-rank">#{index + 1}</div>
+                                            <div className="killer-player">{entry.playerName}</div>
+                                            <div className="killer-count">{entry.count} 💀</div>
+                                            <div className="killer-prize">€{entry.prize}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)'}}>
+                                    Pool totale Killer: €{calculateKillerPool()}
+                                </div>
+                            </div>
                         )}
                     </div>
                 );
@@ -1620,9 +2558,11 @@
                     <div style={{padding: '2rem 1rem'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem'}}>
                             <h1 className="section-title" style={{marginBottom: 0}}>🎲 Tavoli</h1>
-                            <button className="btn btn-primary" onClick={balanceTables}>
-                                ⚖️ Bilancia Tavoli
-                            </button>
+                            {isAdminMode && (
+                                <button className="btn btn-primary" onClick={balanceTables}>
+                                    ⚖️ Bilancia Tavoli
+                                </button>
+                            )}
                         </div>
                         <div className="tables-grid">
                             {tables.map(tableNum => {
@@ -1636,6 +2576,10 @@
                                             <div className="table-seats">
                                                 {seats.map(seatNum => {
                                                     const player = tablePlayers.find(p => p.seat === seatNum);
+                                                    const angle = ((seatNum - 1) * 40) - 90;
+                                                    const radius = 42;
+                                                    const x = 50 + radius * Math.cos(angle * Math.PI / 180);
+                                                    const y = 50 + radius * Math.sin(angle * Math.PI / 180);
                                                     
                                                     if (player) {
                                                         return (
@@ -1643,36 +2587,40 @@
                                                                 key={seatNum}
                                                                 className="table-seat"
                                                                 draggable
-                                                                onDragStart={(e) => handleDragStart(e, player)}
+                                                                onDragStart={(e) => e.dataTransfer.setData('playerId', player.id)}
                                                                 onDragOver={(e) => e.preventDefault()}
                                                                 onDrop={(e) => handleDrop(e, tableNum, seatNum)}
+                                                                style={{
+                                                                    left: `${x}%`,
+                                                                    top: `${y}%`,
+                                                                    transform: 'translate(-50%, -50%)'
+                                                                }}
                                                             >
-                                                                <div className="seat-avatar">
-                                                                    {player.name.split(' ').map(n => n[0]).join('')}
+                                                                <div style={{fontSize: '0.65rem', fontWeight: '700'}}>
+                                                                    {player.name}
                                                                 </div>
-                                                                <div className="seat-name">{player.name.split(' ')[0]}</div>
-                                                                <div className="seat-chips">{(player.chips / 1000).toFixed(0)}k</div>
-                                                                {player.rebuys > 0 && (
-                                                                    <div style={{fontSize: '0.6rem', color: 'var(--accent-blue)'}}>
-                                                                        R:{player.rebuys}
-                                                                    </div>
-                                                                )}
+                                                                <div className="seat-chips">
+                                                                    {player.chips.toLocaleString()}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <div
+                                                                key={seatNum}
+                                                                className="table-seat empty"
+                                                                onDragOver={(e) => e.preventDefault()}
+                                                                onDrop={(e) => handleDrop(e, tableNum, seatNum)}
+                                                                style={{
+                                                                    left: `${x}%`,
+                                                                    top: `${y}%`,
+                                                                    transform: 'translate(-50%, -50%)'
+                                                                }}
+                                                            >
+                                                                {seatNum}
                                                             </div>
                                                         );
                                                     }
-
-                                                    return (
-                                                        <div
-                                                            key={seatNum}
-                                                            className="table-seat empty"
-                                                            onDragOver={(e) => e.preventDefault()}
-                                                            onDrop={(e) => handleDrop(e, tableNum, seatNum)}
-                                                        >
-                                                            <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
-                                                                #{seatNum}
-                                                            </div>
-                                                        </div>
-                                                    );
                                                 })}
                                             </div>
                                         </div>
@@ -1684,183 +2632,520 @@
                 );
             };
 
-            return (
-                <>
-                    <header className="app-header">
-                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1400px', margin: '0 auto'}}>
-                            <div>
-                                <div className="app-logo">DAVIDE POKER DIRECTOR</div>
-                                <div className="logo-subtitle">Tournament Management</div>
-                            </div>
-                            <div style={{display: 'flex', gap: '0.5rem'}}>
-                                <button 
-                                    style={{width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1.2rem', transition: 'all 0.3s'}}
-                                    onClick={exportTournament}
-                                    title="Esporta Torneo"
-                                    onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
-                                    onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                                >
-                                    💾
-                                </button>
-                                <button 
-                                    style={{width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1.2rem', transition: 'all 0.3s'}}
-                                    onClick={() => fileInputRef.current.click()}
-                                    title="Importa Torneo"
-                                    onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
-                                    onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                                >
-                                    📂
-                                </button>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".json"
-                                    style={{display: 'none'}}
-                                    onChange={importTournament}
-                                />
+            const renderModal = () => {
+                if (!modalType) return null;
+
+                if (modalType === 'editPlayer' && editingPlayer) {
+                    return (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="modal-title">Modifica Giocatore</h2>
+                                <div className="form-group">
+                                    <label className="form-label">Nome</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        defaultValue={editingPlayer.name}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                updatePlayerName(editingPlayer.id, e.target.value);
+                                            }
+                                        }}
+                                        autoFocus
+                                    />
+                                </div>
+                                <div style={{display: 'flex', gap: '1rem', marginTop: '1.5rem'}}>
+                                    <button className="btn btn-secondary" onClick={closeModal}>
+                                        Annulla
+                                    </button>
+                                    <button 
+                                        className="btn btn-primary" 
+                                        style={{flex: 1}}
+                                        onClick={(e) => {
+                                            const input = e.target.parentElement.parentElement.querySelector('input');
+                                            updatePlayerName(editingPlayer.id, input.value);
+                                        }}
+                                    >
+                                        Salva
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </header>
+                    );
+                }
 
-                    <div className="app-container">
-                        {currentView === 'dashboard' && renderDashboard()}
-                        {currentView === 'create' && renderCreateTournament()}
-                        {currentView === 'timer' && renderTimer()}
-                        {currentView === 'players' && renderPlayers()}
-                        {currentView === 'tables' && renderTables()}
+                if (modalType === 'eliminate' && eliminatingPlayer) {
+                    const activePlayers = players.filter(p => p.active && !p.eliminated && p.id !== eliminatingPlayer.id);
+                    return (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="modal-title">Elimina Giocatore</h2>
+                                <p style={{marginBottom: '1rem', color: 'var(--text-secondary)'}}>
+                                    Chi ha eliminato <strong>{eliminatingPlayer.name}</strong>?
+                                </p>
+                                <div className="player-list">
+                                    {activePlayers.map(player => (
+                                        <div 
+                                            key={player.id}
+                                            className="player-item"
+                                            onClick={() => eliminatePlayer(eliminatingPlayer.id, player.name)}
+                                        >
+                                            <span className="player-name">{player.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button className="btn btn-secondary" onClick={closeModal} style={{marginTop: '1rem', width: '100%'}}>
+                                    Annulla
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (modalType === 'rebuyKiller' && rebuyingPlayer) {
+                    const activePlayers = players.filter(p => p.active && !p.eliminated && p.id !== rebuyingPlayer.id);
+                    return (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="modal-title">💀 Rebuy - Killer Point</h2>
+                                <p style={{marginBottom: '1rem', color: 'var(--text-secondary)'}}>
+                                    <strong>{rebuyingPlayer.name}</strong> sta facendo rebuy.
+                                    <br/>Chi lo ha eliminato?
+                                </p>
+                                <div className="player-list">
+                                    {activePlayers.map(player => (
+                                        <div 
+                                            key={player.id}
+                                            className="player-item"
+                                            onClick={() => executeRebuy(rebuyingPlayer.id, player.id)}
+                                        >
+                                            <span className="player-name">{player.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button 
+                                    className="btn btn-secondary" 
+                                    onClick={() => {
+                                        executeRebuy(rebuyingPlayer.id, null);
+                                    }} 
+                                    style={{marginTop: '1rem', width: '100%'}}
+                                >
+                                    Rebuy senza assegnare Killer Point
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (modalType === 'addPlayer') {
+                    return (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="modal-title">➕ Aggiungi Giocatore</h2>
+                                <div className="form-group">
+                                    <label className="form-label">Nome Giocatore</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Inserisci nome"
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                addPlayerDuringTournament(e.target.value);
+                                            }
+                                        }}
+                                        autoFocus
+                                    />
+                                </div>
+                                <div style={{marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px', fontSize: '0.9rem'}}>
+                                    <strong>Nota:</strong> Il giocatore verrà aggiunto con {activeTournament?.stack?.toLocaleString() || 10000} chips
+                                    e assegnato al primo posto libero disponibile.
+                                </div>
+                                <div style={{display: 'flex', gap: '1rem', marginTop: '1.5rem'}}>
+                                    <button className="btn btn-secondary" onClick={closeModal}>
+                                        Annulla
+                                    </button>
+                                    <button 
+                                        className="btn btn-primary" 
+                                        style={{flex: 1}}
+                                        onClick={(e) => {
+                                            const input = e.target.parentElement.parentElement.querySelector('input');
+                                            addPlayerDuringTournament(input.value);
+                                        }}
+                                    >
+                                        ➕ Aggiungi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (modalType === 'finalStandings') {
+                    const standings = getFinalStandings();
+                    const prizes = calculatePrizes();
+                    const payouts = calculatePayoutPlaces();
+                    const prizePool = calculatePrizePool();
+                    const killerPool = calculateKillerPool();
+                    
+                    const killerLeaderboard = Object.entries(killerPoints)
+                        .map(([playerId, count]) => {
+                            const player = players.find(p => p.id === parseInt(playerId));
+                            return {
+                                playerId: parseInt(playerId),
+                                playerName: player?.name || 'Unknown',
+                                count: count,
+                                prize: count * (activeTournament?.killerPoint || 0)
+                            };
+                        })
+                        .sort((a, b) => b.count - a.count);
+
+                    return (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
+                                <h2 className="modal-title" style={{textAlign: 'center', fontSize: '2rem'}}>
+                                    🏆 CLASSIFICA FINALE
+                                </h2>
+                                
+                                <div style={{marginBottom: '2rem', textAlign: 'center', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px'}}>
+                                    <div style={{fontSize: '1.5rem', fontWeight: '700', color: 'var(--poker-gold)', marginBottom: '0.5rem'}}>
+                                        💰 Montepremi Totale: €{prizePool}
+                                    </div>
+                                    <div style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                        {payouts} posti a premio ({totalBuyIns} giocatori iniziali)
+                                    </div>
+                                </div>
+
+                                <h3 style={{color: 'var(--poker-gold)', marginBottom: '1rem', fontSize: '1.3rem'}}>
+                                    🏆 Classifica Torneo
+                                </h3>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem'}}>
+                                    {standings.map((player, index) => {
+                                        const position = index + 1;
+                                        const prize = position <= payouts ? prizes[position - 1] : 0;
+                                        const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : '';
+                                        
+                                        return (
+                                            <div 
+                                                key={player.id}
+                                                style={{
+                                                    background: position <= payouts ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)' : 'var(--bg-secondary)',
+                                                    border: position <= payouts ? '2px solid var(--poker-gold)' : '1px solid var(--border-color)',
+                                                    borderRadius: '12px',
+                                                    padding: '1rem',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '1rem', flex: 1}}>
+                                                    <div style={{
+                                                        minWidth: '50px',
+                                                        fontSize: '1.5rem',
+                                                        fontWeight: '700',
+                                                        color: position <= 3 ? 'var(--poker-gold)' : 'var(--text-secondary)'
+                                                    }}>
+                                                        {medal || `${position}°`}
+                                                    </div>
+                                                    <div style={{flex: 1}}>
+                                                        <div style={{
+                                                            fontSize: '1.1rem',
+                                                            fontWeight: '700',
+                                                            color: position <= payouts ? 'var(--poker-gold)' : 'var(--text-primary)'
+                                                        }}>
+                                                            {player.name}
+                                                        </div>
+                                                        <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}}>
+                                                            {!player.eliminated ? `${player.chips.toLocaleString()} chips` : 'Eliminato'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {prize > 0 && (
+                                                    <div style={{
+                                                        fontSize: '1.3rem',
+                                                        fontWeight: '700',
+                                                        color: 'var(--poker-gold)',
+                                                        textAlign: 'right'
+                                                    }}>
+                                                        €{prize}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {activeTournament?.killerPoint > 0 && killerLeaderboard.length > 0 && (
+                                    <>
+                                        <h3 style={{color: '#ff6b6b', marginBottom: '1rem', fontSize: '1.3rem'}}>
+                                            💀 Classifica Killer Points
+                                        </h3>
+                                        <div style={{
+                                            marginBottom: '1rem',
+                                            padding: '0.75rem',
+                                            background: 'linear-gradient(135deg, rgba(220, 20, 60, 0.15) 0%, rgba(139, 0, 0, 0.15) 100%)',
+                                            borderRadius: '8px',
+                                            textAlign: 'center',
+                                            border: '2px solid rgba(220, 20, 60, 0.5)'
+                                        }}>
+                                            <div style={{fontSize: '1.2rem', fontWeight: '700', color: '#ff6b6b'}}>
+                                                Pool Totale Killer: €{killerPool}
+                                            </div>
+                                        </div>
+                                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+                                            {killerLeaderboard.map((entry, index) => (
+                                                <div 
+                                                    key={entry.playerId}
+                                                    style={{
+                                                        background: 'var(--bg-secondary)',
+                                                        border: '1px solid rgba(220, 20, 60, 0.3)',
+                                                        borderRadius: '8px',
+                                                        padding: '0.75rem 1rem',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}
+                                                >
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '1rem', flex: 1}}>
+                                                        <div style={{
+                                                            minWidth: '40px',
+                                                            fontSize: '1.2rem',
+                                                            fontWeight: '700',
+                                                            color: index === 0 ? '#ff6b6b' : 'var(--text-secondary)'
+                                                        }}>
+                                                            #{index + 1}
+                                                        </div>
+                                                        <div style={{
+                                                            flex: 1,
+                                                            fontSize: '1rem',
+                                                            fontWeight: '600',
+                                                            color: 'var(--text-primary)'
+                                                        }}>
+                                                            {entry.playerName}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+                                                        <div style={{
+                                                            fontSize: '1.1rem',
+                                                            fontWeight: '700',
+                                                            color: '#ff6b6b'
+                                                        }}>
+                                                            {entry.count} 💀
+                                                        </div>
+                                                        <div style={{
+                                                            fontSize: '1.1rem',
+                                                            fontWeight: '700',
+                                                            color: 'var(--poker-gold)',
+                                                            minWidth: '60px',
+                                                            textAlign: 'right'
+                                                        }}>
+                                                            €{entry.prize}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+
+                                <button 
+                                    className="btn btn-primary" 
+                                    onClick={closeModal}
+                                    style={{width: '100%', marginTop: '2rem', padding: '1rem', fontSize: '1.1rem'}}
+                                >
+                                    ✅ Chiudi
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (modalType === 'adminAuth') {
+                    return (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '400px'}}>
+                                <h2 className="modal-title">🔐 Password Amministratore</h2>
+                                <div className="form-group">
+                                    <label className="form-label">Inserisci Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        placeholder="Password"
+                                        id="adminPasswordInput"
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const password = e.target.value;
+                                                if (selectAdminMode(password)) {
+                                                    closeModal();
+                                                } else {
+                                                    alert('❌ Password errata!');
+                                                    e.target.value = '';
+                                                }
+                                            }
+                                        }}
+                                        autoFocus
+                                    />
+                                </div>
+                                <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem'}}>
+                                    💡 Password predefinita: <code>poker2025</code>
+                                    <br/>
+                                    Cambiala nel codice per maggiore sicurezza!
+                                </div>
+                                <div style={{display: 'flex', gap: '1rem'}}>
+                                    <button className="btn btn-secondary" onClick={closeModal}>
+                                        Annulla
+                                    </button>
+                                    <button 
+                                        className="btn btn-primary" 
+                                        style={{flex: 1}}
+                                        onClick={() => {
+                                            const password = document.getElementById('adminPasswordInput').value;
+                                            if (selectAdminMode(password)) {
+                                                closeModal();
+                                            } else {
+                                                alert('❌ Password errata!');
+                                                document.getElementById('adminPasswordInput').value = '';
+                                            }
+                                        }}
+                                    >
+                                        🔓 Sblocca
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                return null;
+            };
+
+            // ═══════════════════════════════════════════════════════════════════
+            // MAIN RETURN
+            // ═══════════════════════════════════════════════════════════════════
+            
+            return (
+                <div className="app-container">
+                    {/* Modal Selezione Modalità */}
+                    {showModeSelection && (
+                        <div className="modal-overlay">
+                            <div className="modal-content" style={{maxWidth: '400px', textAlign: 'center'}}>
+                                <h2 className="modal-title">🎰 Seleziona Modalità</h2>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem'}}>
+                                    <button 
+                                        className="btn btn-primary"
+                                        style={{padding: '1.5rem', fontSize: '1.1rem'}}
+                                        onClick={selectViewerMode}
+                                    >
+                                        📺 Solo Visualizzazione
+                                        <div style={{fontSize: '0.85rem', opacity: 0.8, marginTop: '0.5rem'}}>
+                                            Per TV - Vedi tutto, non puoi modificare
+                                        </div>
+                                    </button>
+                                    <button 
+                                        className="btn btn-secondary"
+                                        style={{padding: '1.5rem', fontSize: '1.1rem'}}
+                                        onClick={() => openModal('adminAuth')}
+                                    >
+                                        📱 Amministratore
+                                        <div style={{fontSize: '0.85rem', opacity: 0.8, marginTop: '0.5rem'}}>
+                                            Per Cellulare - Controllo completo (richiede password)
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="header">
+                        <div className="logo">
+                            🎰 Davide Poker Director
+                            {!isAdminMode && <span style={{fontSize: '0.7rem', marginLeft: '0.5rem', color: 'var(--accent-blue)'}}>📺 Viewer</span>}
+                            {isAdminMode && <span style={{fontSize: '0.7rem', marginLeft: '0.5rem', color: 'var(--accent-green)'}}>🔓 Admin</span>}
+                        </div>
+                        <div className="header-actions">
+                            {isAdminMode && (
+                                <button className="icon-btn" onClick={lockAdmin} title="Blocca (Viewer Mode)">
+                                    🔒
+                                </button>
+                            )}
+                            {!isAdminMode && (
+                                <button className="icon-btn" onClick={() => openModal('adminAuth')} title="Sblocca (Admin Mode)">
+                                    🔓
+                                </button>
+                            )}
+                            {activeTournament ? (
+                                <>
+                                    <button className="icon-btn" onClick={exportTournament} title="Esporta">
+                                        💾
+                                    </button>
+                                    <label className="icon-btn" title="Importa">
+                                        📤
+                                        <input
+                                            type="file"
+                                            accept=".json"
+                                            style={{display: 'none'}}
+                                            onChange={importTournament}
+                                        />
+                                    </label>
+                                </>
+                            ) : (
+                                <label className="icon-btn" title="Importa Torneo">
+                                    📤 Importa
+                                    <input
+                                        type="file"
+                                        accept=".json"
+                                        style={{display: 'none'}}
+                                        onChange={importTournament}
+                                    />
+                                </label>
+                            )}
+                        </div>
                     </div>
 
                     {showSaveIndicator && (
                         <div className="save-indicator">
-                            ✅ Torneo salvato!
+                            ✅ Sincronizzato
                         </div>
                     )}
 
-                    <nav className="bottom-nav">
+                    {currentView === 'dashboard' && renderDashboard()}
+                    {currentView === 'create' && renderCreateTournament()}
+                    {currentView === 'timer' && renderTimer()}
+                    {currentView === 'players' && renderPlayers()}
+                    {currentView === 'tables' && renderTables()}
+
+                    {renderModal()}
+
+                    <div className="nav-bar">
                         <div className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}>
-                            <div className="nav-icon">🏠</div>
-                            <div>Home</div>
+                            <div style={{fontSize: '1.5rem'}}>🏠</div>
+                            <div style={{fontSize: '0.75rem'}}>Home</div>
                         </div>
-                        <div className={`nav-item ${currentView === 'timer' ? 'active' : ''}`} onClick={() => setCurrentView('timer')}>
-                            <div className="nav-icon">⏱️</div>
-                            <div>Timer</div>
-                        </div>
-                        <div className={`nav-item ${currentView === 'players' ? 'active' : ''}`} onClick={() => setCurrentView('players')}>
-                            <div className="nav-icon">👥</div>
-                            <div>Giocatori</div>
-                        </div>
-                        <div className={`nav-item ${currentView === 'tables' ? 'active' : ''}`} onClick={() => setCurrentView('tables')}>
-                            <div className="nav-icon">🎲</div>
-                            <div>Tavoli</div>
-                        </div>
-                    </nav>
-
-                    {showModal && modalType === 'templates' && (
-                        <div className="modal-overlay" onClick={closeModal}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <h2 className="modal-header">Template Salvati</h2>
-                                {templates.length === 0 ? (
-                                    <p style={{color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem'}}>
-                                        Nessun template
-                                    </p>
-                                ) : (
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                                        {templates.map(template => (
-                                            <div key={template.id} style={{background: 'var(--dark-bg)', padding: '1rem', borderRadius: '8px'}}>
-                                                <h4 style={{marginBottom: '0.5rem'}}>{template.name}</h4>
-                                                <p style={{fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem'}}>
-                                                    €{template.buyIn} | Stack: {template.stack.toLocaleString()} | Livelli: {template.blindStructure.length}
-                                                </p>
-                                                <div style={{display: 'flex', gap: '0.5rem'}}>
-                                                    <button className="btn btn-primary" style={{flex: 1}} onClick={() => loadTemplate(template)}>
-                                                        Carica
-                                                    </button>
-                                                    <button className="btn btn-secondary" onClick={() => deleteTemplate(template.id)}>
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="modal-actions">
-                                    <button className="btn btn-secondary" onClick={closeModal}>Chiudi</button>
+                        {activeTournament && (
+                            <>
+                                <div className={`nav-item ${currentView === 'timer' ? 'active' : ''}`} onClick={() => setCurrentView('timer')}>
+                                    <div style={{fontSize: '1.5rem'}}>⏱️</div>
+                                    <div style={{fontSize: '0.75rem'}}>Timer</div>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showModal && modalType === 'editPlayer' && editingPlayer && (
-                        <div className="modal-overlay" onClick={closeModal}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <h2 className="modal-header">Modifica Giocatore</h2>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const newName = e.target.elements.playerName.value;
-                                    updatePlayerName(editingPlayer.id, newName);
-                                }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Nome</label>
-                                        <input
-                                            type="text"
-                                            name="playerName"
-                                            className="form-input"
-                                            defaultValue={editingPlayer.name}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Chips:</span>
-                                        <span className="info-value">{editingPlayer.chips.toLocaleString()}</span>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="info-label">Rebuys:</span>
-                                        <span className="info-value">{editingPlayer.rebuys}</span>
-                                    </div>
-                                    <div className="modal-actions">
-                                        <button type="button" className="btn btn-secondary" onClick={closeModal}>
-                                            Annulla
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Salva
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showModal && modalType === 'eliminate' && eliminatingPlayer && (
-                        <div className="modal-overlay" onClick={closeModal}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <h2 className="modal-header">Elimina Giocatore</h2>
-                                <p style={{marginBottom: '1.5rem'}}>
-                                    Chi ha eliminato <strong>{eliminatingPlayer.name}</strong>?
-                                </p>
-                                <div className="players-list">
-                                    {players.filter(p => p.active && !p.eliminated && p.id !== eliminatingPlayer.id).map(player => (
-                                        <div key={player.id} className="player-item">
-                                            <span className="player-name">{player.name}</span>
-                                            <button 
-                                                className="btn btn-primary"
-                                                onClick={() => eliminatePlayer(eliminatingPlayer.id, player.name)}
-                                            >
-                                                Seleziona
-                                            </button>
-                                        </div>
-                                    ))}
+                                <div className={`nav-item ${currentView === 'players' ? 'active' : ''}`} onClick={() => setCurrentView('players')}>
+                                    <div style={{fontSize: '1.5rem'}}>👥</div>
+                                    <div style={{fontSize: '0.75rem'}}>Giocatori</div>
                                 </div>
-                                <div className="modal-actions">
-                                    <button className="btn btn-secondary" onClick={closeModal}>Annulla</button>
+                                <div className={`nav-item ${currentView === 'tables' ? 'active' : ''}`} onClick={() => setCurrentView('tables')}>
+                                    <div style={{fontSize: '1.5rem'}}>🎲</div>
+                                    <div style={{fontSize: '0.75rem'}}>Tavoli</div>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-                </>
+                            </>
+                        )}
+                    </div>
+                </div>
             );
         }
 
-        ReactDOM.render(<App />, document.getElementById('root'));
+        // ═══════════════════════════════════════════════════════════════════
+        // RENDER APP
+        // ═══════════════════════════════════════════════════════════════════
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PokerDirector />);
     </script>
 </body>
 </html>
