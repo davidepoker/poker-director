@@ -1587,6 +1587,39 @@
                 closeModal();
             };
 
+            const removePlayer = (playerId) => {
+                const player = players.find(p => p.id === playerId);
+                if (!player) return;
+                
+                const confirmRemove = confirm(
+                    `⚠️ Annullare iscrizione di ${player.name}?\n\n` +
+                    `Questo rimuoverà completamente il giocatore e:\n` +
+                    `- Ridurrà il montepremi di €${activeTournament?.buyIn || 0}\n` +
+                    `- Lascerà un posto vuoto al suo tavolo\n\n` +
+                    `Usa questa funzione solo se il giocatore NON si presenta.\n` +
+                    `Puoi bilanciare i tavoli manualmente dopo.`
+                );
+                
+                if (!confirmRemove) return;
+                
+                // Rimuovi giocatore completamente
+                const updatedPlayers = players.filter(p => p.id !== playerId);
+                
+                // Riduci totalBuyIns
+                const newTotalBuyIns = Math.max(0, totalBuyIns - 1);
+                
+                // Aggiorna tutto insieme
+                setPlayers(updatedPlayers);
+                setTotalBuyIns(newTotalBuyIns);
+                
+                alert(
+                    `✅ ${player.name} rimosso dal torneo\n\n` +
+                    `Montepremi aggiornato: €${newTotalBuyIns * (activeTournament?.buyIn || 0)}\n` +
+                    `Giocatori rimasti: ${updatedPlayers.filter(p => !p.eliminated).length}\n\n` +
+                    `💡 Vai su "Tavoli" e premi "Bilancia Tavoli" per riorganizzare.`
+                );
+            };
+
             const addPlayerDuringTournament = (playerName) => {
                 if (!playerName || !playerName.trim()) {
                     alert('Inserisci un nome valido');
@@ -2484,6 +2517,14 @@
                                                     onClick={() => openModal('eliminate', player)}
                                                 >
                                                     ❌ Eliminato
+                                                </button>
+                                                <button 
+                                                    className="btn btn-secondary"
+                                                    style={{padding: '0.5rem 1rem', fontSize: '0.85rem', backgroundColor: '#666', color: 'white'}}
+                                                    onClick={() => removePlayer(player.id)}
+                                                    title="Rimuovi giocatore che non si presenta"
+                                                >
+                                                    🚫 Annulla Iscrizione
                                                 </button>
                                             </div>
                                         )}
