@@ -1,0 +1,379 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-12-17T23:14:31.957Z",
+  "id": 1766013194518,
+  "name": "SuperCessy",
+  "type": "freezeout",
+  "buyIn": 20,
+  "maxPlayers": 32,
+  "stack": 20000,
+  "killerPoint": 5,
+  "startTime": "2025-12-17T23:13:14.518Z",
+  "status": "active",
+  "players": [
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013123886,
+      "name": "Davide",
+      "rebuys": 0,
+      "seat": 1,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013126830,
+      "name": "Gianrito",
+      "rebuys": 0,
+      "seat": 2,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013129141,
+      "name": "Fabio",
+      "rebuys": 0,
+      "seat": 3,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013130750,
+      "name": "Manolo",
+      "rebuys": 0,
+      "seat": 4,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013132942,
+      "name": "Enzo",
+      "rebuys": 0,
+      "seat": 5,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013135206,
+      "name": "Antonio",
+      "rebuys": 0,
+      "seat": 6,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013138166,
+      "name": "Sasa1",
+      "rebuys": 0,
+      "seat": 7,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013141885,
+      "name": "SasaFinanz",
+      "rebuys": 0,
+      "seat": 8,
+      "table": 1
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013146406,
+      "name": "PeppeGiaguar",
+      "rebuys": 0,
+      "seat": 1,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013150453,
+      "name": "Lucasel",
+      "rebuys": 0,
+      "seat": 2,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013153390,
+      "name": "Luca2",
+      "rebuys": 0,
+      "seat": 3,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013157325,
+      "name": "Alerok",
+      "rebuys": 0,
+      "seat": 4,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013160261,
+      "name": "Pipporok",
+      "rebuys": 0,
+      "seat": 5,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013162733,
+      "name": "Nathan",
+      "rebuys": 0,
+      "seat": 6,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013166157,
+      "name": "Gianluca",
+      "rebuys": 0,
+      "seat": 7,
+      "table": 2
+    },
+    {
+      "active": true,
+      "chips": 20000,
+      "eliminated": false,
+      "id": 1766013174637,
+      "name": "CognatoGianluca",
+      "rebuys": 0,
+      "seat": 8,
+      "table": 2
+    }
+  ],
+  "totalBuyIns": 16,
+  "totalRebuys": 0,
+  "currentLevel": 0,
+  "timeLeft": 900,
+  "isRunning": false,
+  "eliminationHistory": [],
+  "killerPoints": {},
+  "blindStructure": [
+    {
+      "ante": 0,
+      "bigBlind": 50,
+      "isBreak": false,
+      "level": 1,
+      "smallBlind": 25,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 100,
+      "isBreak": false,
+      "level": 2,
+      "smallBlind": 50,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 200,
+      "isBreak": false,
+      "level": 3,
+      "smallBlind": 100,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 300,
+      "isBreak": false,
+      "level": 4,
+      "smallBlind": 150,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 400,
+      "isBreak": false,
+      "level": 5,
+      "smallBlind": 200,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 600,
+      "isBreak": false,
+      "level": 6,
+      "smallBlind": 300,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 800,
+      "isBreak": false,
+      "level": 7,
+      "smallBlind": 400,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 1000,
+      "isBreak": false,
+      "level": 8,
+      "smallBlind": 500,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 0,
+      "breakName": "Fine Rebuy - Pausa 15min",
+      "isBreak": true,
+      "level": 9,
+      "smallBlind": 0,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 1500,
+      "isBreak": false,
+      "level": 10,
+      "smallBlind": 750,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 2000,
+      "isBreak": false,
+      "level": 11,
+      "smallBlind": 1000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 3000,
+      "isBreak": false,
+      "level": 12,
+      "smallBlind": 1500,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 4000,
+      "isBreak": false,
+      "level": 13,
+      "smallBlind": 2000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 5000,
+      "isBreak": false,
+      "level": 14,
+      "smallBlind": 2500,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 0,
+      "breakName": "Pausa 15min",
+      "isBreak": true,
+      "level": 15,
+      "smallBlind": 0,
+      "time": 15
+    },
+    {
+      "ante": 0,
+      "bigBlind": 6000,
+      "isBreak": false,
+      "level": 16,
+      "smallBlind": 3000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 8000,
+      "isBreak": false,
+      "level": 17,
+      "smallBlind": 4000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 10000,
+      "isBreak": false,
+      "level": 18,
+      "smallBlind": 5000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 15000,
+      "isBreak": false,
+      "level": 19,
+      "smallBlind": 7500,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 20000,
+      "isBreak": false,
+      "level": 20,
+      "smallBlind": 10000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 0,
+      "breakName": "Pausa 10min",
+      "isBreak": true,
+      "level": 21,
+      "smallBlind": 0,
+      "time": 10
+    },
+    {
+      "ante": 0,
+      "bigBlind": 30000,
+      "isBreak": false,
+      "level": 22,
+      "smallBlind": 15000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 40000,
+      "isBreak": false,
+      "level": 23,
+      "smallBlind": 20000,
+      "time": 20
+    },
+    {
+      "ante": 0,
+      "bigBlind": 50000,
+      "isBreak": false,
+      "level": 24,
+      "smallBlind": 25000,
+      "time": 100
+    }
+  ]
+}
