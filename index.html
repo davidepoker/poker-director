@@ -831,7 +831,8 @@
             // Admin/Viewer Mode
             const [isAdminMode, setIsAdminMode] = useState(false);
             const [showModeSelection, setShowModeSelection] = useState(true);
-            const ADMIN_PASSWORD = 'kingdavid'; // ⚠️ CAMBIA QUESTA PASSWORD!
+            const ADMIN_PASSWORD = 'Kingdavid!'; // ⚠️ CAMBIA QUESTA PASSWORD!
+            const FIREBASE_WRITE_PASSWORD = 'Kingdavid!'; // ⚠️ Password per scrivere su Firebase (deve coincidere con regole)
 
             // Tournament Creation
             const [createStep, setCreateStep] = useState(1);
@@ -1004,6 +1005,27 @@
 
             // Ripristina modalità salvata all'avvio
             useEffect(() => {
+                // Check URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const forceViewer = urlParams.get('viewer') === 'true';
+                const forceReset = urlParams.get('reset') === 'true';
+                
+                // Se c'è ?reset=true, cancella tutto localStorage
+                if (forceReset) {
+                    localStorage.removeItem('pokerMode');
+                    localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
+                    console.log('🔄 Reset localStorage completato');
+                }
+                
+                // Se c'è ?viewer=true, forza viewer mode
+                if (forceViewer) {
+                    setIsAdminMode(false);
+                    setShowModeSelection(false);
+                    localStorage.setItem('pokerMode', 'viewer');
+                    return;
+                }
+                
+                // Altrimenti ripristina modalità salvata
                 const savedMode = localStorage.getItem('pokerMode');
                 if (savedMode === 'admin') {
                     setIsAdminMode(true);
@@ -1171,6 +1193,60 @@
                 }
             }, [players, activeTournament]);
 
+            // Auto-scroll automatico in Viewer Mode (TV)
+            useEffect(() => {
+                if (isAdminMode) return; // Solo in viewer mode
+                if (currentView !== 'players' && currentView !== 'tables') return; // Solo su Giocatori/Tavoli
+                
+                let scrollInterval;
+                let isScrollingDown = true;
+                let scrollPosition = 0;
+                
+                const startAutoScroll = () => {
+                    scrollInterval = setInterval(() => {
+                        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                        
+                        if (maxScroll <= 0) return; // Niente da scrollare
+                        
+                        if (isScrollingDown) {
+                            scrollPosition += 1; // Pixel per frame (più alto = più veloce)
+                            
+                            if (scrollPosition >= maxScroll) {
+                                // Raggiunto fondo, pausa e torna su
+                                setTimeout(() => {
+                                    isScrollingDown = false;
+                                }, 3000); // Pausa 3 secondi in fondo
+                            }
+                        } else {
+                            scrollPosition -= 1;
+                            
+                            if (scrollPosition <= 0) {
+                                // Raggiunto cima, pausa e scendi
+                                setTimeout(() => {
+                                    isScrollingDown = true;
+                                }, 3000); // Pausa 3 secondi in cima
+                            }
+                        }
+                        
+                        window.scrollTo({
+                            top: scrollPosition,
+                            behavior: 'smooth'
+                        });
+                    }, 30); // Aggiorna ogni 30ms (smooth)
+                };
+                
+                // Avvia scroll dopo 2 secondi (da tempo di vedere la pagina)
+                const startTimeout = setTimeout(() => {
+                    startAutoScroll();
+                }, 2000);
+                
+                return () => {
+                    clearTimeout(startTimeout);
+                    clearInterval(scrollInterval);
+                    window.scrollTo({ top: 0, behavior: 'instant' }); // Reset scroll
+                };
+            }, [isAdminMode, currentView, players.length]);
+
             const playSound = () => {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
@@ -1227,7 +1303,8 @@
                     eliminationHistory: eliminationHistory || [],
                     killerPoints: killerPoints || {},
                     blindStructure: blindStructure || [],
-                    currentView: currentView || 'timer', // ⭐ NUOVO: Sincronizza vista
+                    currentView: currentView || 'timer',
+                    writePassword: FIREBASE_WRITE_PASSWORD, // ⭐ Password per sicurezza Firebase
                     lastUpdated: Date.now()
                 });
 
