@@ -832,7 +832,7 @@
             const [isAdminMode, setIsAdminMode] = useState(false);
             const [showModeSelection, setShowModeSelection] = useState(true);
             const ADMIN_PASSWORD = 'Kingdavid!'; // ⚠️ CAMBIA QUESTA PASSWORD!
-            const FIREBASE_WRITE_PASSWORD = 'Kingdavid!'; // ⚠️ Password per scrivere su Firebase (deve coincidere con regole)
+            const FIREBASE_WRITE_PASSWORD = 'PokerSecure2025!'; // ⚠️ Password per scrivere su Firebase (deve coincidere con regole)
 
             // Tournament Creation
             const [createStep, setCreateStep] = useState(1);
@@ -1432,7 +1432,15 @@
                 const numTables = Math.ceil(totalPlayers / 9);
                 const playersPerTable = Math.ceil(totalPlayers / numTables);
                 
-                const balanced = activePlayers.map((player, index) => ({
+                // 🎲 SHUFFLE: Mescola casualmente i giocatori (algoritmo Fisher-Yates)
+                const shuffled = [...activePlayers];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                
+                // Assegna tavoli e posti ai giocatori mischiati
+                const balanced = shuffled.map((player, index) => ({
                     ...player,
                     table: Math.floor(index / playersPerTable) + 1,
                     seat: (index % playersPerTable) + 1
@@ -1445,7 +1453,7 @@
                 });
                 
                 setPlayers(updatedPlayers);
-                alert(`Tavoli bilanciati: ${numTables} tavoli, ~${playersPerTable} giocatori per tavolo`);
+                alert(`🎲 Tavoli bilanciati e mischiati!\n\n${numTables} tavoli, ~${playersPerTable} giocatori per tavolo`);
             };
 
             const startTournament = () => {
