@@ -1376,8 +1376,11 @@
                     // localStorage pieno, continua con Firebase
                 }
 
-                setShowSaveIndicator(true);
-                setTimeout(() => setShowSaveIndicator(false), 2000);
+                // ⭐ Mostra indicatore solo in modalità online (Firebase)
+                if (isFirebaseConfigured) {
+                    setShowSaveIndicator(true);
+                    setTimeout(() => setShowSaveIndicator(false), 2000);
+                }
             };
 
             const loadTournament = (tournamentData) => {
@@ -1420,28 +1423,36 @@
             };
 
             const deleteSavedTournament = (tournamentId) => {
-                if (confirm('Eliminare questo torneo salvato?')) {
-                    const updated = savedTournaments.filter(t => t.id !== tournamentId);
-                    setSavedTournaments(updated);
-                    
-                    if (activeTournament?.id === tournamentId) {
-                        if (database && isFirebaseConfigured) {
-                            database.ref('activeTournament').remove();
-                        }
-                        localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
-                        setActiveTournament(null);
-                        setPlayers([]);
-                        setTotalBuyIns(0);
-                        setTotalRebuys(0);
-                        setCurrentLevel(0);
-                        setTimeLeft(1200);
-                        setIsRunning(false);
-                        setEliminationHistory([]);
-                        setKillerPoints({});
-                        setBlindStructure(defaultBlindStructure);
-                        setCurrentView('dashboard');
+                if (!confirm('Eliminare questo torneo?')) return;
+                
+                // ⭐ FIX: Se è il torneo attivo, eliminalo completamente
+                if (activeTournament?.id === tournamentId) {
+                    // Elimina da Firebase se configurato
+                    if (database && isFirebaseConfigured) {
+                        database.ref('activeTournament').remove();
                     }
+                    
+                    // Elimina da localStorage
+                    localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
+                    
+                    // Reset state
+                    setActiveTournament(null);
+                    setPlayers([]);
+                    setTotalBuyIns(0);
+                    setTotalRebuys(0);
+                    setCurrentLevel(0);
+                    setTimeLeft(1200);
+                    setIsRunning(false);
+                    setEliminationHistory([]);
+                    setKillerPoints({});
+                    setBlindStructure(defaultBlindStructure);
+                    setCurrentView('dashboard');
                 }
+                
+                // ⭐ Rimuovi anche da savedTournaments se presente
+                const updated = savedTournaments.filter(t => t.id !== tournamentId);
+                setSavedTournaments(updated);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); // ⭐ Salva subito
             };
 
             // ═══════════════════════════════════════════════════════════════════
@@ -3286,7 +3297,7 @@
                         </div>
                     </div>
 
-                    {showSaveIndicator && (
+                    {showSaveIndicator && isFirebaseConfigured && (
                         <div className="save-indicator">
                             ✅ Sincronizzato
                         </div>
