@@ -1045,6 +1045,50 @@
             useEffect(() => {
                 if (!database || !isFirebaseConfigured) {
                     console.log("ℹ️ Firebase non configurato - Solo localStorage");
+                    
+                    // ⭐ CARICA torneo attivo da localStorage quando offline
+                    try {
+                        const saved = localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
+                        if (saved) {
+                            isReceivingRef.current = true; // ⭐ Previeni auto-save immediato
+                            
+                            const tournamentData = JSON.parse(saved);
+                            
+                            const tournament = {
+                                id: tournamentData.id,
+                                name: tournamentData.name,
+                                type: tournamentData.type,
+                                buyIn: tournamentData.buyIn,
+                                maxPlayers: tournamentData.maxPlayers,
+                                stack: tournamentData.stack,
+                                killerPoint: tournamentData.killerPoint || 0,
+                                startTime: tournamentData.startTime,
+                                status: tournamentData.status,
+                                blindStructure: tournamentData.blindStructure
+                            };
+                            
+                            setActiveTournament(tournament);
+                            setPlayers(tournamentData.players || []);
+                            setTotalBuyIns(tournamentData.totalBuyIns || 0);
+                            setTotalRebuys(tournamentData.totalRebuys || 0);
+                            setCurrentLevel(tournamentData.currentLevel || 0);
+                            setTimeLeft(tournamentData.timeLeft || 1200);
+                            setIsRunning(tournamentData.isRunning || false);
+                            setEliminationHistory(tournamentData.eliminationHistory || []);
+                            setKillerPoints(tournamentData.killerPoints || {});
+                            setBlindStructure(tournamentData.blindStructure || defaultBlindStructure);
+                            setCurrentView(tournamentData.currentView || 'timer');
+                            
+                            setTimeout(() => {
+                                isReceivingRef.current = false; // ⭐ Rilascia dopo 2 secondi
+                            }, 2000);
+                            
+                            console.log('✅ Torneo caricato da localStorage:', tournament.name);
+                        }
+                    } catch (error) {
+                        console.error('❌ Errore caricamento localStorage:', error);
+                    }
+                    
                     return;
                 }
 
@@ -1069,15 +1113,23 @@
                     }
                     
                     if (data && data.id) {
-                        const now = Date.now();
-                        if (now - lastUpdateTimeRef.current < 2000) {
-                            return;
+                        // ⭐ FIX: Se siamo in admin mode E stiamo ricevendo un echo del nostro salvataggio, ignora
+                        if (isReceivingRef.current) {
+                            return; // Stiamo ancora processando un aggiornamento precedente
                         }
                         
+                        const now = Date.now();
                         const currentTime = activeTournament?.lastUpdated || 0;
-                        const isNewerData = data.lastUpdated && data.lastUpdated > currentTime + 1000;
                         
-                        if (isNewerData) {
+                        // ⭐ FIX: In Admin mode, ignora aggiornamenti che arrivano troppo presto dopo una nostra modifica
+                        if (isAdminMode && now - lastUpdateTimeRef.current < 3000) {
+                            return; // Admin ha appena fatto una modifica, ignora echo Firebase
+                        }
+                        
+                        // ⭐ FIX: Solo accetta dati più recenti
+                        const isNewerData = data.lastUpdated && data.lastUpdated > currentTime + 500;
+                        
+                        if (isNewerData || !activeTournament) {
                             isReceivingRef.current = true;
                             lastUpdateTimeRef.current = now;
                             
@@ -1104,14 +1156,14 @@
                             setKillerPoints(data.killerPoints || {});
                             setBlindStructure(data.blindStructure || defaultBlindStructure);
                             
-                            // ⭐ NUOVO: Sincronizza vista solo in viewer mode
+                            // ⭐ Sincronizza vista SOLO in viewer mode
                             if (!isAdminMode && data.currentView) {
                                 setCurrentView(data.currentView);
                             }
                             
                             setTimeout(() => {
                                 isReceivingRef.current = false;
-                            }, 1000);
+                            }, 1500); // Aumentato a 1.5 secondi
                         }
                     }
                 });
@@ -1121,7 +1173,7 @@
                         tournamentRef.off('value', listener);
                     }
                 };
-            }, [database, isFirebaseConfigured]);
+            }, [database, isFirebaseConfigured, isAdminMode]); // ⭐ Aggiungo isAdminMode alle dipendenze
 
             // Auto-save tournament
             useEffect(() => {
